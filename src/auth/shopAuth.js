@@ -1,8 +1,9 @@
 'use strict';
 
 const { asyncHandler } = require('../helpers/asyncHandler');
-const { AuthFailureError, NotFoundError, ForbiddenError } = require('../core/error.response');
+const { AuthFailureError, NotFoundError } = require('../core/error.response');
 const { findByUserId } = require('../services/keyToken.service');
+const { validateShopStatus } = require('../utils/shop.validation');
 const shopModel = require('../models/shop.model');
 const JWT = require('jsonwebtoken');
 
@@ -52,9 +53,8 @@ const shopAuthenticationV2 = asyncHandler(async (req, res, next) => {
             throw new NotFoundError('Shop not found');
         }
 
-        if (shop.status !== 'active') {
-            throw new ForbiddenError('Shop account is not active');
-        }
+        // Check shop status and permissions
+        validateShopStatus(shop);
 
         // Attach user and shop info to request
         req.user = decodeUser;

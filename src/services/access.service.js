@@ -138,6 +138,21 @@ class AccessService {
         if (!match) {
             throw new AuthFailureError('Error: Invalid password')
         }
+
+        // Check shop status
+        if (foundShop.status === 'inactive') {
+            throw new ForbiddenError('Shop account is pending verification by admin. Please wait or contact support.');
+        }
+
+        if (foundShop.status === 'blocked') {
+            const reason = foundShop.blockedReason ? ` Reason: ${foundShop.blockedReason}` : '';
+            throw new ForbiddenError(`Shop account has been blocked.${reason}`);
+        }
+
+        if (foundShop.status !== 'active') {
+            throw new ForbiddenError('Shop account is not active');
+        }
+
         //Created token
         const publicKey = crypto.randomBytes(64).toString('hex')
         const privateKey = crypto.randomBytes(64).toString('hex')

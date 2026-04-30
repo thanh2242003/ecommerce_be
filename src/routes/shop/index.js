@@ -8,14 +8,19 @@ const { shopAuthenticationV2 } = require('../../auth/shopAuth');
 const { asyncHandler } = require('../../auth/checkAuth');
 
 // Controllers
+const AccessController = require('../../controllers/access.controller');
 const ShopOrderController = require('../../controllers/shop.order.controller');
 const ShopDashboardController = require('../../controllers/shop.dashboard.controller');
 const ShopInventoryController = require('../../controllers/shop.inventory.controller');
 const ShopProductController = require('../../controllers/shop.product.controller');
 const ShopDiscountController = require('../../controllers/shop.discount.controller');
 
+// ================= PUBLIC ROUTES (NO AUTH REQUIRED) =================
+router.post('/signin', asyncHandler(AccessController.signIn));
+router.post('/signup', asyncHandler(AccessController.signUp));
+
 // ================= PROTECTED ROUTES =================
-// All shop routes require authentication
+// All other shop routes require authentication
 router.use(shopAuthenticationV2);
 
 /**
@@ -41,5 +46,8 @@ router.patch('/orders/:id/status', asyncHandler(ShopOrderController.updateOrderS
 
 // GET /v1/api/shop/dashboard — Get dashboard metrics
 router.get('/dashboard', asyncHandler(ShopDashboardController.getDashboard));
+
+// GET /v1/api/shop/status — Get shop account status
+router.get('/status', asyncHandler(ShopDashboardController.getShopStatus));
 
 module.exports = router;
