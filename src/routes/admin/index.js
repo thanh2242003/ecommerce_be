@@ -7,6 +7,12 @@ const { asyncHandler } = require('../../helpers/asyncHandler');
 const { verifyAdmin } = require('../../auth/adminAuth');
 
 const AdminAuthController = require('../../controllers/admin.auth.controller');
+
+// Debug: log incoming admin router requests
+router.use((req, res, next) => {
+    console.debug('[admin router] incoming', { originalUrl: req.originalUrl, path: req.path, headers: Object.keys(req.headers) });
+    next();
+});
 const AdminShopController = require('../../controllers/admin.shop.controller');
 const AdminUserController = require('../../controllers/admin.user.controller');
 const AdminProductController = require('../../controllers/admin.product.controller');

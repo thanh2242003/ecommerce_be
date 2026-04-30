@@ -215,15 +215,24 @@ const createTokenPair = async (payload, publicKey, privateKey) => {
 
 // ================= AUTH V2 =================
 const authenticationV2 = asyncHandler(async (req, res, next) => {
+    console.debug('[authenticationV2] start', { path: req.path, originalUrl: req.originalUrl, headers: Object.keys(req.headers) });
 
     // ✅ BYPASS LOGIN / SIGNUP
     if (PUBLIC_PATHS.includes(req.path)) {
         return next();
     }
 
+    // ✅ BYPASS x-client-id requirement for admin endpoints
+    // Admin routes use `verifyAdmin` (JWT) for authentication, so
+    // `x-client-id` should not be required for those paths.
+    if (req.originalUrl && req.originalUrl.startsWith('/v1/api/admin')) {
+        console.debug('[authenticationV2] bypass for admin path', req.originalUrl);
+        return next();
+    }
     const userId = req.headers[HEADER.CLIENT_ID];
 
     if (!userId) {
+        console.debug('[authenticationV2] missing client id; headers:', Object.keys(req.headers));
         throw new AuthFailureError('Invalid request');
     }
 

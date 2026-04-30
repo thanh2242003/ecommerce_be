@@ -19,8 +19,11 @@ router.use('/v1/api/search', require('./search/index'))
 router.use('/v1/api/users', require('./notification/index'))
 router.use('/v1/api', require('./notification/notification.routes'))
 router.use('/api/users', require('./notification/index'))
-router.use('/v1/api', require('./access/index'))
 router.use('/v1/api/shop', require('./shop/index'));
+// Mount admin routes before the general '/v1/api' access router so that
+// admin requests are handled by admin router and not intercepted by
+// `authenticationV2` middleware inside the access router.
 router.use('/v1/api/admin', require('./admin/index'));
+router.use('/v1/api', require('./access/index'))
 
 module.exports = router

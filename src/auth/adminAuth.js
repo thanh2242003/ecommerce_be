@@ -41,10 +41,12 @@ const createAdminTokenPair = async (payload) => {
 };
 
 const verifyAdmin = asyncHandler(async (req, res, next) => {
-    const token = parseAuthorizationToken(req.headers.authorization);
+    // Accept token from several common places to be more tolerant during testing
+    const rawAuth = req.headers.authorization || req.headers['x-access-token'] || req.headers['access-token'] || req.headers['x-access-token'];
+    const token = parseAuthorizationToken(rawAuth);
 
     if (!token) {
-        throw new AuthFailureError('Admin token is required');
+        throw new AuthFailureError('Admin token is required (use "Authorization: Bearer <token>" or "x-access-token: <token>")');
     }
 
     const { accessSecret } = getAdminJwtConfig();
@@ -53,11 +55,11 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
     try {
         payload = jwt.verify(token, accessSecret);
     } catch (error) {
-        throw new AuthFailureError('Invalid admin token');
+        throw new AuthFailureError(`Invalid admin token: ${error.message}`);
     }
 
     if (!payload?.userId) {
-        throw new AuthFailureError('Invalid admin token');
+        throw new AuthFailureError('Invalid admin token: missing userId in token payload');
     }
 
     const admin = await Admin.findById(payload.userId)
@@ -76,6 +78,10 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
         ...payload,
         profile: admin,
     };
+    // Helpful debug when running locally: attach token payload for troubleshooting
+    if (process.env.NODE_ENV !== 'production') {
+        console.debug('[verifyAdmin] token payload:', payload);
+    }
     req.user = req.admin;
     req.adminId = String(admin._id);
 
