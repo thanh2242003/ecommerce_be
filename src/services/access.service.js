@@ -1,0 +1,333 @@
+"use strict";
+
+const shopModel = require("../models/shop.model");
+const userModel = require("../models/user.model");
+const bcrypt = require("bcrypt");
+const crypto = require('crypto');
+const KeyTokenService = require("./keyToken.service");
+const { createTokenPair, verifyJWT } = require("../auth/authUtils");
+const { getInforData } = require("../utils");
+const { BadRequestError, ConflictRequestError, AuthFailureError, ForbiddenError } = require("../core/error.response");
+
+
+const { findByEmail } = require("./shop.service");
+const UserService = require("./user.service");
+const keytokenModel = require("../models/keytoken.model");
+
+const RoleShop = {
+    SHOP: 'SHOP',
+    WRITER: 'WRITER',
+    EDITER: 'EDITER',
+    ADMIN: 'ADMIN',
+}
+class AccessService {
+    static findAccountByEmail = async (email) => {
+        const foundShop = await findByEmail({ email });
+        if (foundShop) {
+            return { account: foundShop, accountType: 'SHOP' };
+        }
+
+        const foundUser = await UserService.findByEmail({ email });
+        if (foundUser) {
+            return { account: foundUser, accountType: 'USER' };
+        }
+
+        return null;
+    }
+
+    static handlerRefeshToken = async (refreshToken) => {
+        /*
+         1- Check this token used?
+
+ 
+        */
+
+        const foundToken = await KeyTokenService.findByRefreshTokenUsed(refreshToken)
+        // Yes
+        if (foundToken) {
+            // decode xem la ai??
+            const { userId, email } = await verifyJWT(refreshToken, foundToken.privateKey)
+            // xoa
+            await KeyTokenService.deleteKeyById(userId)
+            throw new ForbiddenError('Something wrong happened! Please re-login')
+        }
+        // No, qua ngon!
+        const holderToken = await KeyTokenService.findByRefreshToken(refreshToken)
+        if (!holderToken) {
+            throw new AuthFailureError('Error: Shop not registered 1')
+        }
+
+        // verify token
+        const { userId, email } = await verifyJWT(refreshToken, holderToken.privateKey)
+        // check userId
+
+        const accountResult = await AccessService.findAccountByEmail(email)
+        if (!accountResult) {
+            throw new AuthFailureError('Error: Account not registered 2')
+        }
+
+        // Create new token pair 
+        const tokens = await createTokenPair({ userId: accountResult.account._id, email }, holderToken.publicKey, holderToken.privateKey)
+        //Update token
+        await keytokenModel.updateOne(
+            { _id: holderToken._id },
+            {
+                $set: {
+                    refreshToken: tokens.refreshToken,
+                },
+                $addToSet: {
+                    refreshTokensUsed: refreshToken // đã được sử dụng để lấy token mới rồi
+                }
+            }
+        );
+
+        return {
+            user: { userId, email },
+            tokens
+        }
+    }
+
+    static handlerRefeshTokenV2 = async ({ refreshToken, user, keyStore }) => {
+
+        const { userId, email } = user;
+
+        if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+            await KeyTokenService.deleteKeyById(userId)
+            throw new ForbiddenError('Something wrong happened! Please re-login')
+        }
+
+        if (keyStore.refreshToken != refreshToken) {
+            throw new AuthFailureError('Error: Shop not registered')
+        }
+
+        const accountResult = await AccessService.findAccountByEmail(email)
+        if (!accountResult) {
+            throw new AuthFailureError('Error: Account not registered')
+        }
+
+        // Create new token pair 
+        const tokens = await createTokenPair({ userId: accountResult.account._id, email }, keyStore.publicKey, keyStore.privateKey)
+        //Update token
+        await keytokenModel.updateOne(
+            { _id: keyStore._id },
+            {
+                $set: {
+                    refreshToken: tokens.refreshToken,
+                },
+                $addToSet: {
+                    refreshTokensUsed: refreshToken // đã được sử dụng để lấy token mới rồi
+                }
+            }
+        );
+
+        return {
+            user,
+            tokens
+        }
+
+    }
+
+    static signIn = async ({ email, password, refreshToken = null }) => {
+        //Email
+        const foundShop = await findByEmail({ email })
+        if (!foundShop) {
+            throw new BadRequestError('Error: Shop not found')
+        }
+        //Password
+        const match = await bcrypt.compare(password, foundShop.password);
+        if (!match) {
+            throw new AuthFailureError('Error: Invalid password')
+        }
+        //Created token
+        const publicKey = crypto.randomBytes(64).toString('hex')
+        const privateKey = crypto.randomBytes(64).toString('hex')
+
+        const tokens = await createTokenPair({ userId: foundShop._id, email }, publicKey, privateKey)
+
+        await KeyTokenService.createKeyToken({
+            userId: foundShop._id,
+            publicKey,
+            privateKey,
+            refreshToken: tokens.refreshToken,
+        })
+        return {
+            shop: getInforData({ fields: ['_id', 'name', 'email'], object: foundShop }),
+            tokens
+        }
+    }
+
+    static signUp = async ({ name, email, password }) => {
+        // try {
+        //Step1: check email exists?
+
+        const holderShop = await shopModel.findOne({ email }).lean();
+
+        if (holderShop) {
+            // return {
+            //     code: "409",
+            //     message: "Email already exists",
+            //     status: "error",
+            // };
+
+            throw new BadRequestError('Error: Shop already registered')
+        }
+
+        const passwordhash = await bcrypt.hash(password, 10);
+
+        const newShop = await shopModel.create({
+            name,
+            email,
+            password: passwordhash,
+            roles: [RoleShop.SHOP],
+        });
+
+        if (newShop) {
+            // Create privateKey and publicKey
+
+            // ### complicated
+
+            // const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa',{
+            //     modulusLength: 4096,
+            //     publicKeyEncoding: {
+            //         type: 'pkcs1',
+            //         format: 'pem'
+            //     },
+            //     privateKeyEncoding: {
+            //         type: 'pkcs1',
+            //         format: 'pem'
+            //     }
+            // })
+
+            // ### simple
+
+            const publicKey = crypto.randomBytes(64).toString('hex')
+            const privateKey = crypto.randomBytes(64).toString('hex')
+
+            const keyStore = await KeyTokenService.createKeyToken({
+                userId: newShop._id,
+                publicKey,
+                privateKey
+            })
+
+            if (!keyStore) {
+                return {
+                    code: "409",
+                    message: "keyStore error",
+                    status: "error",
+                };
+            }
+
+            //Create token pair
+            const tokens = await createTokenPair({ userId: newShop._id, email }, publicKey, privateKey)
+            // return {
+            //     code: "201 <3 MoongJB check ::",
+            //     metadata: {
+            //         shop: getInforData({fields: ['_id', 'name', 'email'], object: newShop}),
+            //         tokens
+            //     },
+            // }
+
+            return {
+                shop: getInforData({ fields: ['_id', 'name', 'email'], object: newShop }),
+                tokens
+            }
+
+        }
+
+        return {
+            code: "200",
+            metadata: null
+        }
+        // } catch (error) {
+        // return {
+        //     code: "errorxxxx",
+        //     message: error.message || "Internal Server Error",
+        //     status: "error",
+        // };
+        // }
+    };
+
+    // ================= USER SIGN UP =================
+    static userSignUp = async ({ name, email, password }) => {
+        // Check email exists?
+        const holderUser = await userModel.findOne({ email }).lean();
+
+        if (holderUser) {
+            throw new BadRequestError('Error: User already registered')
+        }
+
+        const passwordhash = await bcrypt.hash(password, 10);
+
+        const newUser = await userModel.create({
+            name,
+            email,
+            password: passwordhash,
+            roles: ['USER'],
+        });
+
+        if (newUser) {
+            const publicKey = crypto.randomBytes(64).toString('hex')
+            const privateKey = crypto.randomBytes(64).toString('hex')
+
+            const keyStore = await KeyTokenService.createKeyToken({
+                userId: newUser._id,
+                publicKey,
+                privateKey
+            })
+
+            if (!keyStore) {
+                throw new BadRequestError('Error: keyStore creation failed')
+            }
+
+            // Create token pair
+            const tokens = await createTokenPair({ userId: newUser._id, email }, publicKey, privateKey)
+
+            return {
+                user: getInforData({ fields: ['_id', 'name', 'email', 'phone', 'address'], object: newUser }),
+                tokens
+            }
+        }
+
+        throw new BadRequestError('Error: User creation failed')
+    };
+
+    // ================= USER SIGN IN =================
+    static userSignIn = async ({ email, password }) => {
+        // Find user by email
+        const foundUser = await UserService.findByEmail({ email });
+        if (!foundUser) {
+            throw new BadRequestError('Error: User not found')
+        }
+
+        // Verify password
+        const match = await bcrypt.compare(password, foundUser.password);
+        if (!match) {
+            throw new AuthFailureError('Error: Invalid password')
+        }
+
+        // Create tokens
+        const publicKey = crypto.randomBytes(64).toString('hex')
+        const privateKey = crypto.randomBytes(64).toString('hex')
+
+        const tokens = await createTokenPair({ userId: foundUser._id, email }, publicKey, privateKey)
+
+        await KeyTokenService.createKeyToken({
+            userId: foundUser._id,
+            publicKey,
+            privateKey,
+            refreshToken: tokens.refreshToken,
+        })
+
+        return {
+            user: getInforData({ fields: ['_id', 'name', 'email', 'phone', 'address'], object: foundUser }),
+            tokens
+        }
+    }
+
+    static logout = async ({ keyStore }) => {
+        const delKey = await KeyTokenService.removeKeyById(keyStore._id)
+        return delKey;
+    }
+}
+
+module.exports = AccessService;
