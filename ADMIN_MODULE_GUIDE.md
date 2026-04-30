@@ -614,40 +614,145 @@ curl -X GET http://localhost:3000/v1/api/admin/analytics/overview \
 - `src/auth/adminAuth.js` - Authentication logic
 - `src/utils/admin.validation.js` - Validation utilities
 - `src/routes/admin/index.js` - Route definitions
+- `src/services/admin.*.service.js` - Business logic
 - MongoDB Documentation - Aggregation Pipeline
 - JWT Best Practices - Token security
-- Delete categories
-- Bulk seed default categories
-- Duplicate prevention
-
-**Implementation:**
-- Very basic, no complex validation
-- No pagination for list
-- No filtering options
-- No audit trail
-
-### 2. Send Notifications
-
-**Endpoint:**
-```
-POST   /v1/api/notifications/send
-```
-
-**Features:**
-- Send to specific user
-- Include custom data
-- FCM token support (Firebase)
-- Multiple notification types
-
-**Limitations:**
-- No bulk sending
-- No scheduling
-- No template support
-- No targeting by user segments
 
 ---
 
-## Recommended Implementation Plan
+## Notes for Developers
+
+1. **Always validate input** before processing
+2. **Use proper error codes** for clarity
+3. **Include pagination** in list endpoints
+4. **Log admin actions** for audit trail
+5. **Check permissions** before any modification
+6. **Handle edge cases** (empty results, invalid IDs)
+7. **Format responses** consistently
+8. **Test error scenarios** thoroughly
+
+---
+
+## Known Limitations
+
+1. **Rate Limiting**: No rate limiting currently implemented
+2. **Audit Logging**: Admin actions not fully logged
+3. **Bulk Operations**: No bulk approve/reject for products
+4. **Scheduling**: No scheduled notifications/announcements
+5. **Export**: No export functionality for reports
+
+---
+
+## Testing Endpoints
+
+### 1. Using cURL
+
+```bash
+# Login
+curl -X POST http://localhost:3000/v1/api/admin/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"account":"admin","password":"password123"}'
+
+# Get profile
+curl -X GET http://localhost:3000/v1/api/admin/profile \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# List shops
+curl -X GET "http://localhost:3000/v1/api/admin/shops?page=1&limit=10&status=active" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Block a shop
+curl -X PATCH http://localhost:3000/v1/api/admin/shops/SHOP_ID/status \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"blocked","reason":"Vi phạm điều khoản"}'
+```
+
+### 2. Using Postman
+
+1. Import admin routes from Postman collection
+2. Set environment variables: `BASE_URL`, `TOKEN`
+3. Test each endpoint individually
+4. Verify response format and data
+
+### 3. Testing Checklist
+
+- [ ] Login returns tokens
+- [ ] Profile endpoint requires authentication
+- [ ] Shop list pagination works
+- [ ] Shop filters work (status, keyword)
+- [ ] Shop verify sets correct fields
+- [ ] User ban/unban works
+- [ ] Cannot ban admin
+- [ ] Cannot ban yourself
+- [ ] Product moderation sets flags
+- [ ] Order status updates work
+- [ ] Analytics returns aggregated data
+- [ ] Bulk notifications handles partial failures
+- [ ] Error responses have correct codes
+- [ ] Unauthorized requests return 401
+
+---
+
+## Troubleshooting
+
+### Issue: "Admin not found" error on login
+
+**Solution:** Check if admin account exists in database with `active` status
+
+### Issue: "Admin permission required" on profile
+
+**Solution:** Ensure JWT token includes admin role, check `verifyAdmin` middleware
+
+### Issue: Pagination not working
+
+**Solution:** Verify `page` and `limit` params are numbers, check `parsePagination` utility
+
+### Issue: Search/filter not returning results
+
+**Solution:** Check regex patterns, ensure keyword is trimmed, verify filter logic
+
+### Issue: Bulk notifications partial failures
+
+**Solution:** Check `failedRecipients` array in response, retry failed recipients
+
+---
+
+## Performance Optimization Tips
+
+1. **Use indexes** on frequently filtered fields:
+   - `shops.status`, `shops.email`
+   - `users.status`, `users.email`
+   - `products.status`
+   - `orders.status`
+
+2. **Optimize MongoDB queries**:
+   - Use `lean()` for read-only queries
+   - Limit fields in projection
+   - Use aggregation pipeline for complex operations
+
+3. **Add caching** for:
+   - Analytics overview (invalidate hourly)
+   - Top-selling products (invalidate daily)
+
+4. **Implement batch operations** for:
+   - Bulk product status changes
+   - Bulk user status changes
+
+---
+
+## Security Best Practices
+
+1. **Always validate** JWT tokens
+2. **Check admin role** in middleware
+3. **Sanitize input** before database queries
+4. **Use parameterized queries** (Mongoose does this)
+5. **Implement rate limiting** for sensitive endpoints
+6. **Log all admin actions** for audit trail
+7. **Use HTTPS** in production
+8. **Implement CORS** properly
+9. **Validate file uploads** if applicable
+10. **Set secure JWT expiry** times
 
 ### Phase 1: Foundation (Weeks 1-2)
 

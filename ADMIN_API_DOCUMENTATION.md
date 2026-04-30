@@ -4,7 +4,7 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
 
 ## Thông Tin Chung
 
-**Base URL:** `GET /v1/api/admin`
+**Base URL:** `/v1/api/admin`
 
 **Xác Thực:**
 - Tất cả endpoint (ngoại trừ `POST /auth/login`) yêu cầu header: `Authorization: Bearer <adminAccessToken>`
@@ -24,6 +24,18 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
 - Tối đa: `limit=100`
 - Query params: `page`, `limit`
 
+**Pagination Response Format:**
+```json
+{
+  "total": 50,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 5,
+  "hasNextPage": true,
+  "hasPrevPage": false
+}
+```
+
 ---
 
 ## 1. Admin Authentication (Xác Thực Admin)
@@ -31,7 +43,7 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
 ### POST /auth/login
 Đăng nhập admin
 
-**Headers:** None
+**Headers:** None (không cần token)
 
 **Body:**
 ```json
@@ -41,7 +53,11 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
 }
 ```
 
-**Response:**
+**Validation:**
+- `account`: bắt buộc, không được trống
+- `password`: bắt buộc, không được trống
+
+**Response (200):**
 ```json
 {
   "code": 200,
@@ -58,7 +74,7 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
       "updatedAt": "2024-01-01T00:00:00.000Z"
     },
     "tokens": {
-      "accessToken": "jwt_token",
+      "accessToken": "jwt_access_token",
       "refreshToken": "jwt_refresh_token"
     }
   }
@@ -66,7 +82,8 @@ Tài liệu này mô tả chi tiết tất cả các endpoint Admin API hiện �
 ```
 
 **Lỗi:**
-- `401`: Invalid admin credentials
+- `400`: Account is required / Password is required
+- `401`: Account does not exist / Password is incorrect
 - `403`: Only admin accounts can login / Admin account is inactive
 
 ---
@@ -76,9 +93,9 @@ Lấy thông tin profile admin hiện tại
 
 **Headers:** `Authorization: Bearer <adminAccessToken>`
 
-**Query Params:** None
+**Query Params:** Không có
 
-**Response:**
+**Response (200):**
 ```json
 {
   "code": 200,
@@ -98,6 +115,11 @@ Lấy thông tin profile admin hiện tại
 }
 ```
 
+**Lỗi:**
+- `401`: Unauthorized (token không hợp lệ)
+- `404`: Admin not found
+- `403`: Admin permission required
+
 ---
 
 ## 2. Shop Management (Quản Lý Shop)
@@ -108,12 +130,21 @@ Lấy danh sách shops với phân trang
 **Headers:** `Authorization: Bearer <adminAccessToken>`
 
 **Query Params:**
-- `page` (number, default: 1)
-- `limit` (number, default: 10, max: 100)
-- `status` (string): `active`, `blocked`, `inactive` - lọc theo trạng thái
-- `keyword` (string): tìm kiếm theo `name` hoặc `email`
+- `page` (number, default: 1) - Trang hiện tại
+- `limit` (number, default: 10, max: 100) - Số shop trên 1 trang
+- `status` (string, optional): 
+  - `active` - shops đang hoạt động
+  - `blocked` - shops bị khóa
+  - `inactive` - shops không hoạt động
+  - Nếu không có param, lấy tất cả
+- `keyword` (string, optional) - Tìm kiếm theo `name` hoặc `email`
 
-**Response:**
+**Example Request:**
+```
+GET /v1/api/admin/shops?page=1&limit=10&status=active&keyword=shop
+```
+
+**Response (200):**
 ```json
 {
   "code": 200,
@@ -144,10 +175,775 @@ Lấy danh sách shops với phân trang
 }
 ```
 
+**Lỗi:**
+- `401`: Unauthorized
+
 ---
 
 ### GET /shops/:shopId
 Lấy chi tiết một shop cụ thể
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `shopId` (string, bắt buộc) - ID của shop
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get shop successfully!",
+  "metadata": {
+    "_id": "shop_id",
+    "name": "Shop Name",
+    "email": "shop@example.com",
+    "phone": "0123456789",
+    "status": "active",
+    "verify": true,
+    "avatar": "url_to_image",
+    "description": "Shop description",
+    "address": "Shop address",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid shop ID
+- `401`: Unauthorized
+- `404`: Shop not found
+
+---
+
+### PATCH /shops/:shopId/status
+Cập nhật trạng thái của shop
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `shopId` (string, bắt buộc) - ID của shop
+
+**Body:**
+```json
+{
+  "status": "active|blocked|inactive",
+  "reason": "Lý do khóa shop (optional, chỉ cần khi status=blocked)"
+}
+```
+
+**Status Values:**
+- `active` - Kích hoạt shop
+- `blocked` - Khóa shop
+- `inactive` - Vô hiệu hóa shop
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Update shop status successfully!",
+  "metadata": {
+    "_id": "shop_id",
+    "name": "Shop Name",
+    "status": "blocked",
+    "blockedAt": "2024-01-01T10:30:00.000Z",
+    "blockedReason": "Reason for blocking",
+    "updatedAt": "2024-01-01T10:30:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid shop ID / Shop status must be active or blocked
+- `401`: Unauthorized
+- `404`: Shop not found
+
+---
+
+### PATCH /shops/:shopId/verify
+Xác minh shop
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `shopId` (string, bắt buộc) - ID của shop
+
+**Body:**
+```json
+{}
+```
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Verify shop successfully!",
+  "metadata": {
+    "_id": "shop_id",
+    "name": "Shop Name",
+    "status": "active",
+    "verify": true,
+    "verifiedAt": "2024-01-01T10:30:00.000Z",
+    "verifiedBy": "admin_id",
+    "updatedAt": "2024-01-01T10:30:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid shop ID
+- `401`: Unauthorized
+- `404`: Shop not found
+
+---
+
+## 3. User Management (Quản Lý User)
+
+### GET /users
+Lấy danh sách users với phân trang
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**Query Params:**
+- `page` (number, default: 1) - Trang hiện tại
+- `limit` (number, default: 10, max: 100) - Số user trên 1 trang
+- `status` (string, optional):
+  - `active` / `unban` - Users đang hoạt động
+  - `inactive` / `ban` - Users bị khóa
+- `keyword` (string, optional) - Tìm kiếm theo `name` hoặc `email`
+
+**Example Request:**
+```
+GET /v1/api/admin/users?page=1&limit=10&status=active&keyword=user
+```
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get users successfully!",
+  "metadata": {
+    "users": [
+      {
+        "_id": "user_id",
+        "name": "User Name",
+        "email": "user@example.com",
+        "phone": "0123456789",
+        "address": "User address",
+        "avatar": "url_to_image",
+        "status": "active",
+        "roles": [],
+        "verify": true,
+        "isAdmin": false,
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 100,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 10,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+**Lỗi:**
+- `401`: Unauthorized
+
+---
+
+### GET /users/:userId
+Lấy chi tiết một user cụ thể
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `userId` (string, bắt buộc) - ID của user
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get user successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "User Name",
+    "email": "user@example.com",
+    "phone": "0123456789",
+    "address": "User address",
+    "avatar": "url_to_image",
+    "status": "active",
+    "roles": [],
+    "verify": true,
+    "isAdmin": false,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid user ID
+- `401`: Unauthorized
+- `404`: User not found
+
+---
+
+### PATCH /users/:userId/status
+Cập nhật trạng thái user (ban/unban)
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `userId` (string, bắt buộc) - ID của user
+
+**Body:**
+```json
+{
+  "status": "active|inactive|ban|unban"
+}
+```
+
+**Status Values:**
+- `active` / `unban` - Kích hoạt / Bỏ khóa user
+- `inactive` / `ban` - Khóa user
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Update user status successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "User Name",
+    "email": "user@example.com",
+    "status": "inactive",
+    "isAdmin": false,
+    "updatedAt": "2024-01-01T10:30:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid user ID / User status must be active or inactive
+- `401`: Unauthorized
+- `403`: Cannot ban another admin / Cannot ban yourself
+- `404`: User not found
+
+---
+
+## 4. Product Management (Kiểm Duyệt Sản Phẩm)
+
+### GET /products
+Lấy danh sách products cần duyệt
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**Query Params:**
+- `page` (number, default: 1) - Trang hiện tại
+- `limit` (number, default: 10, max: 100) - Số product trên 1 trang
+- `status` (string, optional):
+  - `pending` - Chờ duyệt (default nếu không có status)
+  - `approved` - Đã duyệt
+  - `rejected` - Bị từ chối
+
+**Example Request:**
+```
+GET /v1/api/admin/products?page=1&limit=10&status=pending
+```
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get products successfully!",
+  "metadata": {
+    "products": [
+      {
+        "_id": "product_id",
+        "title": "Product Title",
+        "images": ["image_url1", "image_url2"],
+        "price": 100000,
+        "status": "pending",
+        "categoryId": {
+          "_id": "category_id",
+          "name": "Category Name",
+          "slug": "category-slug"
+        },
+        "product_shop": {
+          "_id": "shop_id",
+          "name": "Shop Name",
+          "email": "shop@example.com",
+          "status": "active",
+          "verify": true
+        },
+        "createdAt": "2024-01-01T00:00:00.000Z",
+        "updatedAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 25,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 3,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+**Lỗi:**
+- `401`: Unauthorized
+
+---
+
+### PATCH /products/:id/status
+Cập nhật trạng thái duyệt sản phẩm
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `id` (string, bắt buộc) - ID của product
+
+**Body:**
+```json
+{
+  "status": "pending|approved|rejected",
+  "moderationNote": "Ghi chú duyệt (optional)"
+}
+```
+
+**Status Values:**
+- `pending` - Chờ duyệt
+- `approved` - Duyệt sản phẩm (isPublished=true)
+- `rejected` - Từ chối sản phẩm (isPublished=false)
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Update product status successfully!",
+  "metadata": {
+    "_id": "product_id",
+    "title": "Product Title",
+    "status": "approved",
+    "isPublished": true,
+    "isDraft": false,
+    "moderatedBy": "admin_id",
+    "moderatedAt": "2024-01-01T10:30:00.000Z",
+    "moderationNote": "Ghi chú duyệt",
+    "updatedAt": "2024-01-01T10:30:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid product ID / Product status must be pending, approved, or rejected
+- `401`: Unauthorized
+- `404`: Product not found
+
+---
+
+### DELETE /products/:id
+Xóa product
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `id` (string, bắt buộc) - ID của product
+
+**Body:**
+```json
+{}
+```
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Delete product successfully!",
+  "metadata": {
+    "deleted": true,
+    "productId": "product_id"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid product ID
+- `401`: Unauthorized
+- `404`: Product not found
+
+---
+
+## 5. Order Management (Quản Lý Đơn Hàng)
+
+### GET /orders
+Lấy danh sách orders
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**Query Params:**
+- `page` (number, default: 1) - Trang hiện tại
+- `limit` (number, default: 10, max: 100) - Số order trên 1 trang
+- `status` (string, optional):
+  - `pending` - Chờ xác nhận
+  - `confirmed` - Đã xác nhận
+  - `processing` - Đang xử lý
+  - `shipped` - Đã gửi
+  - `delivered` - Đã giao
+  - `cancelled` - Đã hủy
+
+**Example Request:**
+```
+GET /v1/api/admin/orders?page=1&limit=10&status=pending
+```
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get orders successfully!",
+  "metadata": {
+    "orders": [
+      {
+        "_id": "order_id",
+        "status": "pending",
+        "userId": {
+          "_id": "user_id",
+          "name": "User Name",
+          "email": "user@example.com",
+          "phone": "0123456789",
+          "avatar": "url",
+          "status": "active",
+          "roles": []
+        },
+        "shopId": {
+          "_id": "shop_id",
+          "name": "Shop Name",
+          "email": "shop@example.com",
+          "status": "active",
+          "verify": true
+        },
+        "items": [
+          {
+            "productId": {
+              "_id": "product_id",
+              "title": "Product Title",
+              "images": ["image_url"],
+              "price": 100000,
+              "product_type": "type",
+              "status": "approved"
+            },
+            "quantity": 1,
+            "price": 100000,
+            "productName": "Product Title",
+            "image": "image_url"
+          }
+        ],
+        "totalPrice": 100000,
+        "finalPrice": 100000,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "limit": 10,
+      "totalPages": 5,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+**Lỗi:**
+- `401`: Unauthorized
+
+---
+
+### GET /orders/:id
+Lấy chi tiết một order
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `id` (string, bắt buộc) - ID của order
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get order successfully!",
+  "metadata": {
+    "_id": "order_id",
+    "status": "pending",
+    "userId": {
+      "_id": "user_id",
+      "name": "User Name",
+      "email": "user@example.com",
+      "phone": "0123456789",
+      "avatar": "url",
+      "status": "active",
+      "roles": []
+    },
+    "shopId": {
+      "_id": "shop_id",
+      "name": "Shop Name",
+      "email": "shop@example.com",
+      "status": "active",
+      "verify": true
+    },
+    "items": [
+      {
+        "productId": {
+          "_id": "product_id",
+          "title": "Product Title",
+          "images": ["image_url"],
+          "price": 100000,
+          "product_type": "type",
+          "status": "approved"
+        },
+        "quantity": 1,
+        "price": 100000
+      }
+    ],
+    "totalPrice": 100000,
+    "finalPrice": 100000,
+    "notes": "Order notes",
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid order ID
+- `401`: Unauthorized
+- `404`: Order not found
+
+---
+
+### PATCH /orders/:id/status
+Cập nhật trạng thái order
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**URL Params:**
+- `id` (string, bắt buộc) - ID của order
+
+**Body:**
+```json
+{
+  "status": "pending|confirmed|processing|shipped|delivered|cancelled",
+  "note": "Ghi chú (optional)"
+}
+```
+
+**Status Values:**
+- `pending` - Chờ xác nhận
+- `confirmed` - Đã xác nhận
+- `processing` - Đang xử lý
+- `shipped` - Đã gửi
+- `delivered` - Đã giao
+- `cancelled` - Đã hủy
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Update order status successfully!",
+  "metadata": {
+    "_id": "order_id",
+    "status": "confirmed",
+    "notes": "Ghi chú",
+    "updatedAt": "2024-01-01T10:30:00.000Z",
+    "userId": {...},
+    "shopId": {...},
+    "items": [...]
+  }
+}
+```
+
+**Lỗi:**
+- `400`: Invalid order ID / Invalid order status
+- `401`: Unauthorized
+- `404`: Order not found
+
+---
+
+## 6. Analytics (Thống Kê Hệ Thống)
+
+### GET /analytics/overview
+Lấy tổng hợp thống kê hệ thống
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**Query Params:** Không có
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Get analytics overview successfully!",
+  "metadata": {
+    "totalUsers": 150,
+    "totalShops": 25,
+    "totalOrders": 300,
+    "totalRevenue": 30000000,
+    "ordersByStatus": {
+      "pending": {
+        "count": 10,
+        "revenue": 2000000
+      },
+      "confirmed": {
+        "count": 50,
+        "revenue": 8000000
+      },
+      "delivered": {
+        "count": 200,
+        "revenue": 20000000
+      },
+      "cancelled": {
+        "count": 5,
+        "revenue": 500000
+      }
+    },
+    "topSellingProducts": [
+      {
+        "productId": "product_id",
+        "productName": "Product Name",
+        "productImage": "image_url",
+        "totalSold": 100,
+        "totalRevenue": 10000000
+      }
+    ]
+  }
+}
+```
+
+**Lỗi:**
+- `401`: Unauthorized
+
+---
+
+## 7. Notifications (Gửi Thông Báo)
+
+### POST /notifications/send-bulk
+Gửi thông báo hàng loạt cho users
+
+**Headers:** `Authorization: Bearer <adminAccessToken>`
+
+**Body:**
+```json
+{
+  "userIds": ["user_id_1", "user_id_2", "user_id_3"],
+  "title": "Tiêu đề thông báo",
+  "body": "Nội dung thông báo",
+  "type": "promotion|system|custom|order|promo|test",
+  "data": {
+    "key1": "value1",
+    "key2": "value2"
+  }
+}
+```
+
+**Validation:**
+- `userIds`: bắt buộc, phải là array không rỗng, mỗi id phải là string
+- `title`: bắt buộc, không được trống
+- `body`: bắt buộc, không được trống
+- `type`: optional, default='system', values: promotion|system|custom|order|promo|test
+- `data`: optional, object tùy ý
+
+**Response (200):**
+```json
+{
+  "code": 200,
+  "message": "Send bulk notifications successfully!",
+  "metadata": {
+    "requestedCount": 3,
+    "successCount": 3,
+    "failureCount": 0,
+    "notifications": [
+      {
+        "_id": "notification_id_1",
+        "userId": "user_id_1",
+        "title": "Tiêu đề thông báo",
+        "body": "Nội dung thông báo",
+        "type": "promotion",
+        "read": false,
+        "createdAt": "2024-01-01T10:30:00.000Z"
+      }
+    ],
+    "failedRecipients": []
+  }
+}
+```
+
+**Response (200) - Có lỗi gửi:**
+```json
+{
+  "code": 200,
+  "message": "Send bulk notifications successfully!",
+  "metadata": {
+    "requestedCount": 3,
+    "successCount": 2,
+    "failureCount": 1,
+    "notifications": [...],
+    "failedRecipients": [
+      {
+        "userId": "user_id_3",
+        "message": "Send notification failed"
+      }
+    ]
+  }
+}
+```
+
+**Lỗi:**
+- `400`: userIds must be a non-empty array / title is required / body is required / type must be promotion, system, custom, order, promo, or test
+- `401`: Unauthorized
+
+---
+
+## Error Response Format
+
+Tất cả lỗi sử dụng format:
+```json
+{
+  "code": 400|401|403|404|409|500,
+  "message": "Mô tả lỗi",
+  "status": "error"
+}
+```
+
+**Status Codes:**
+- `400`: Bad Request - Dữ liệu không hợp lệ
+- `401`: Unauthorized - Token không hợp lệ hoặc hết hạn
+- `403`: Forbidden - Không có quyền truy cập
+- `404`: Not Found - Không tìm thấy tài nguyên
+- `409`: Conflict - Xung đột dữ liệu
+- `500`: Internal Server Error - Lỗi server
+
+---
+
+## Common Query Parameters
+
+### Pagination Example:
+```
+GET /v1/api/admin/shops?page=2&limit=20
+```
+
+### Search & Filter Example:
+```
+GET /v1/api/admin/users?page=1&limit=10&status=active&keyword=john
+```
 
 **Headers:** `Authorization: Bearer <adminAccessToken>`
 

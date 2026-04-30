@@ -16,9 +16,11 @@
 **POST /auth/login:**
 - Body: `{ account, password }`
 - Return: `{ admin, tokens }`
+- Lỗi: 400, 401, 403
 
 **GET /profile:**
-- Return: Admin info
+- Return: Admin info với permissions, lastLogin
+- Lỗi: 401, 403, 404
 
 ---
 
@@ -31,16 +33,18 @@
 | PATCH | `/shops/:shopId/status` | Cập nhật status | ✅ |
 | PATCH | `/shops/:shopId/verify` | Xác minh shop | ✅ |
 
-**Query Params (GET /shops):**
-- `page`, `limit`
-- `status`: `active|blocked|inactive`
-- `keyword`: tìm kiếm name/email
+**GET /shops:**
+- Query: `page`, `limit`, `status`, `keyword`
+- Status values: `active|blocked|inactive`
+- Return: shops[], pagination
 
 **PATCH /shops/:shopId/status:**
 - Body: `{ status: "active|blocked|inactive", reason?: "..." }`
+- Set: `blockedAt`, `blockedReason` khi status=blocked
 
 **PATCH /shops/:shopId/verify:**
 - Body: `{}`
+- Set: `verify=true`, `status=active`, `verifiedAt`, `verifiedBy`
 
 ---
 
@@ -52,14 +56,18 @@
 | GET | `/users/:userId` | Lấy chi tiết user | ✅ |
 | PATCH | `/users/:userId/status` | Cập nhật status | ✅ |
 
-**Query Params (GET /users):**
-- `page`, `limit`
-- `status`: `active|inactive|ban|unban`
-- `keyword`: tìm kiếm name/email
+**GET /users:**
+- Query: `page`, `limit`, `status`, `keyword`
+- Status values: `active|unban` (active), `inactive|ban` (inactive)
+- Return: users[], pagination
+- Field include: `isAdmin` (derived from roles)
 
 **PATCH /users/:userId/status:**
 - Body: `{ status: "active|inactive|ban|unban" }`
-- Lưu ý: Không thể ban admin hoặc chính mình
+- Lỗi: Không thể ban admin hoặc chính mình (403)
+- Status mapping:
+  - `active`/`unban` → `active`
+  - `inactive`/`ban` → `inactive`
 
 ---
 
@@ -71,15 +79,23 @@
 | PATCH | `/products/:id/status` | Cập nhật status duyệt | ✅ |
 | DELETE | `/products/:id` | Xóa product | ✅ |
 
-**Query Params (GET /products):**
-- `page`, `limit`
-- `status`: `pending|approved|rejected`
+**GET /products:**
+- Query: `page`, `limit`, `status`
+- Status values: `pending|approved|rejected`
+- Return: products[], pagination
+- Include: categoryId (name, slug), product_shop (shop info)
 
 **PATCH /products/:id/status:**
 - Body: `{ status: "pending|approved|rejected", moderationNote?: "..." }`
+- Set: `moderatedBy`, `moderatedAt`, `moderationNote`
+- Status mapping:
+  - `approved` → isPublished=true, isDraft=false
+  - `rejected` → isPublished=false, isDraft=false
+  - `pending` → isPublished=false, isDraft=true
 
 **DELETE /products/:id:**
 - Body: `{}`
+- Return: `{ deleted: true, productId }`
 
 ---
 
@@ -91,12 +107,95 @@
 | GET | `/orders/:id` | Lấy chi tiết order | ✅ |
 | PATCH | `/orders/:id/status` | Cập nhật status | ✅ |
 
-**Query Params (GET /orders):**
-- `page`, `limit`
-- `status`: `pending|confirmed|processing|shipped|delivered|cancelled`
+**GET /orders:**
+- Query: `page`, `limit`, `status`
+- Status values: `pending|confirmed|processing|shipped|delivered|cancelled`
+- Return: orders[], pagination
+- Include: userId, shopId, items (with productId populated)
 
 **PATCH /orders/:id/status:**
 - Body: `{ status: "pending|confirmed|processing|shipped|delivered|cancelled", note?: "..." }`
+- Set: `notes` (nếu có note)
+- Return: order info đầy đủ (populated)
+
+---
+
+## 6. Analytics (Thống Kê Hệ Thống)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/analytics/overview` | Lấy tổng hợp thống kê | ✅ |
+
+**GET /analytics/overview:**
+- Return:
+  - `totalUsers`, `totalShops`, `totalOrders`
+  - `totalRevenue` (sum finalPrice or totalPrice)
+  - `ordersByStatus` (map: count, revenue by status)
+  - `topSellingProducts` (top 5: productName, totalSold, totalRevenue)
+
+---
+
+## 7. Notifications (Gửi Thông Báo)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| POST | `/notifications/send-bulk` | Gửi thông báo hàng loạt | ✅ |
+
+**POST /notifications/send-bulk:**
+- Body: `{ userIds[], title, body, type?, data? }`
+- Type values: `promotion|system|custom|order|promo|test` (default: system)
+- Return:
+  - `requestedCount`, `successCount`, `failureCount`
+  - `notifications[]` (created notifications)
+  - `failedRecipients[]` (userId, message)
+
+---
+
+## HTTP Status Codes
+
+| Code | Ý Nghĩa |
+|------|---------|
+| 200 | OK - Request thành công |
+| 400 | Bad Request - Dữ liệu không hợp lệ |
+| 401 | Unauthorized - Token không hợp lệ |
+| 403 | Forbidden - Không có quyền truy cập |
+| 404 | Not Found - Không tìm thấy tài nguyên |
+| 409 | Conflict - Xung đột dữ liệu |
+| 500 | Internal Server Error - Lỗi server |
+
+---
+
+## Common Patterns
+
+### Pagination Response:
+```json
+{
+  "total": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10,
+  "hasNextPage": true,
+  "hasPrevPage": false
+}
+```
+
+### Error Response:
+```json
+{
+  "code": 400,
+  "message": "Error description",
+  "status": "error"
+}
+```
+
+### Success Response:
+```json
+{
+  "code": 200,
+  "message": "Success message",
+  "metadata": { ... }
+}
+```
 
 ---
 
