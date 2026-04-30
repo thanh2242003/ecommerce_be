@@ -53,17 +53,23 @@ class AdminOrderService {
             throw new BadRequestError('Invalid order ID');
         }
 
-        const order = await Order.findById(orderId);
+        const updateData = {
+            status: normalizeOrderStatus(status),
+        };
+
+        if (note) {
+            updateData.notes = String(note).trim();
+        }
+
+        const order = await Order.findByIdAndUpdate(
+            orderId,
+            updateData,
+            { new: true, runValidators: false }
+        );
+
         if (!order) {
             throw new NotFoundError('Order not found');
         }
-
-        order.status = normalizeOrderStatus(status);
-        if (note) {
-            order.notes = String(note).trim();
-        }
-
-        await order.save();
 
         return populateOrderQuery(Order.findById(orderId)).lean();
     }
