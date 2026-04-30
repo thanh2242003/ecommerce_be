@@ -1,7 +1,7 @@
 'use strict';
 
 const bcrypt = require('bcrypt');
-const User = require('../models/user.model');
+const Admin = require('../models/admin.model');
 const { BadRequestError, AuthFailureError, ForbiddenError, NotFoundError } = require('../core/error.response');
 const { getInforData } = require('../utils');
 const { createAdminTokenPair } = require('../auth/adminAuth');
@@ -10,12 +10,12 @@ const { isAdminRole, validateAdminLoginInput } = require('../utils/admin.validat
 const escapeRegExp = (value = '') => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 class AdminAuthService {
-    static async login({ email, password }) {
-        validateAdminLoginInput({ email, password });
+    static async login({ account, password }) {
+        validateAdminLoginInput({ account, password });
 
-        const normalizedEmail = String(email).trim();
-        const admin = await User.findOne({
-            email: { $regex: `^${escapeRegExp(normalizedEmail)}$`, $options: 'i' }
+        const normalizedAccount = String(account).trim();
+        const admin = await Admin.findOne({
+            account: { $regex: `^${escapeRegExp(normalizedAccount)}$`, $options: 'i' }
         });
 
         if (!admin) {
@@ -35,16 +35,21 @@ class AdminAuthService {
             throw new AuthFailureError('Invalid admin credentials');
         }
 
+        // Update last login and reset login attempts
+        await Admin.findByIdAndUpdate(admin._id, {
+            lastLogin: new Date()
+        });
+
         const tokens = await createAdminTokenPair({
             userId: String(admin._id),
-            email: admin.email,
+            account: admin.account,
             name: admin.name,
             roles: admin.roles,
         });
 
         return {
             admin: getInforData({
-                fields: ['_id', 'name', 'email', 'phone', 'avatar', 'status', 'roles', 'verify', 'createdAt', 'updatedAt'],
+                fields: ['_id', 'name', 'account', 'status', 'roles', 'verify', 'createdAt', 'updatedAt'],
                 object: admin.toObject(),
             }),
             tokens,
@@ -56,8 +61,8 @@ class AdminAuthService {
             throw new BadRequestError('Admin ID is required');
         }
 
-        const admin = await User.findById(adminId)
-            .select('_id name email phone avatar status roles verify createdAt updatedAt')
+        const admin = await Admin.findById(adminId)
+            .select('_id name account status roles verify permissions lastLogin createdAt updatedAt')
             .lean();
 
         if (!admin) {

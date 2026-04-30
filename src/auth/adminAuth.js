@@ -3,49 +3,8 @@
 const jwt = require('jsonwebtoken');
 const { ForbiddenError, AuthFailureError } = require('../core/error.response');
 const { asyncHandler } = require('../helpers/asyncHandler');
-const User = require('../models/user.model');
+const Admin = require('../models/admin.model');
 const { isAdminRole } = require('../utils/admin.validation');
-
-// TODO: replace with env/config after testing
-const HARDCODED_ADMIN_USER_IDS = [
-    '680f91f6f01b7d2a2fa9c001',
-];
-
-const getAdminUserIds = () => {
-    if (HARDCODED_ADMIN_USER_IDS.length > 0) {
-        return HARDCODED_ADMIN_USER_IDS;
-    }
-
-    const raw = process.env.ADMIN_USER_IDS || '';
-    return raw.split(',').map((id) => id.trim()).filter(Boolean);
-};
-
-const requireAdmin = (req, res, next) => {
-    const adminUserIds = getAdminUserIds();
-    const currentUserId = req.user?.userId
-        ? String(req.user.userId)
-        : String(req.headers['x-client-id'] || '');
-
-    if (!currentUserId || !adminUserIds.includes(currentUserId)) {
-        throw new ForbiddenError('Admin permission required');
-    }
-
-    return next();
-};
-
-const requireAdminByClientId = (req, res, next) => {
-    const adminUserIds = getAdminUserIds();
-    const clientId = String(req.headers['x-client-id'] || '').trim();
-
-    if (!clientId || !adminUserIds.includes(clientId)) {
-        throw new ForbiddenError('Admin permission required');
-    }
-
-    // Store adminId in request for use in controller
-    req.adminId = clientId;
-
-    return next();
-};
 
 const parseAuthorizationToken = (value = '') => {
     const raw = String(value || '').trim();
@@ -101,8 +60,8 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
         throw new AuthFailureError('Invalid admin token');
     }
 
-    const admin = await User.findById(payload.userId)
-        .select('_id name email phone avatar status roles verify createdAt updatedAt')
+    const admin = await Admin.findById(payload.userId)
+        .select('_id name account status roles verify permissions lastLogin createdAt updatedAt')
         .lean();
 
     if (!admin || !isAdminRole(admin.roles)) {
@@ -124,8 +83,6 @@ const verifyAdmin = asyncHandler(async (req, res, next) => {
 });
 
 module.exports = {
-    requireAdmin,
-    requireAdminByClientId,
     verifyAdmin,
     createAdminTokenPair,
 };

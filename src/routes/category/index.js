@@ -5,7 +5,7 @@ const router = express.Router();
 
 const CategoryController = require('../../controllers/category.controller');
 const { asyncHandler } = require('../../auth/checkAuth');
-const { requireAdminByClientId } = require('../../auth/adminAuth');
+const { verifyAdmin } = require('../../auth/adminAuth');
 
 /*
 ========================
@@ -24,20 +24,20 @@ router.get('/:categoryId', asyncHandler(CategoryController.getCategoryById));
 
 /*
 ========================
-        ADMIN ONLY (via x-client-id header)
+        ADMIN ONLY (via JWT token)
 ========================
 */
 
 // CREATE CATEGORY (Admin only)
-router.post('/', requireAdminByClientId, asyncHandler(CategoryController.createCategory));
+router.post('/', verifyAdmin, asyncHandler(CategoryController.createCategory));
 
 // UPDATE CATEGORY (Admin only)
-router.patch('/:categoryId', requireAdminByClientId, asyncHandler(CategoryController.updateCategory));
+router.patch('/:categoryId', verifyAdmin, asyncHandler(CategoryController.updateCategory));
 
 // DELETE CATEGORY (Admin only)
-router.delete('/:categoryId', requireAdminByClientId, asyncHandler(CategoryController.deleteCategory));
+router.delete('/:categoryId', verifyAdmin, asyncHandler(CategoryController.deleteCategory));
 
 // SEED CATEGORIES (Admin only)
-router.post('/seed/default', requireAdminByClientId, asyncHandler(CategoryController.seedCategories));
+router.post('/seed/default', verifyAdmin, asyncHandler(CategoryController.seedCategories));
 
 module.exports = router;
