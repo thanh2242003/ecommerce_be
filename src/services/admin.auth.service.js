@@ -14,12 +14,13 @@ class AdminAuthService {
         validateAdminLoginInput({ account, password });
 
         const normalizedAccount = String(account).trim();
+        
         const admin = await Admin.findOne({
             account: { $regex: `^${escapeRegExp(normalizedAccount)}$`, $options: 'i' }
         });
 
         if (!admin) {
-            throw new AuthFailureError('Invalid admin credentials');
+            throw new AuthFailureError('Account does not exist');
         }
 
         if (!isAdminRole(admin.roles)) {
@@ -32,7 +33,7 @@ class AdminAuthService {
 
         const isPasswordMatched = await bcrypt.compare(String(password), admin.password);
         if (!isPasswordMatched) {
-            throw new AuthFailureError('Invalid admin credentials');
+            throw new AuthFailureError('Password is incorrect');
         }
 
         // Update last login and reset login attempts

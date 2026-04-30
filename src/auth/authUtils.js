@@ -192,7 +192,8 @@ const PUBLIC_PATHS = [
     '/shop/signup',
     '/shop/signin',
     '/user/signup',
-    '/user/signin'
+    '/user/signin',
+    '/admin/auth/login'
 ];
 
 // ================= CREATE TOKEN =================

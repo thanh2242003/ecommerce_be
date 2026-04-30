@@ -10,9 +10,9 @@ const isAdminRole = (roles = []) => {
     return roles.some((role) => String(role).trim().toLowerCase() === 'admin');
 };
 
-const validateAdminLoginInput = ({ email, password }) => {
-    if (!email || String(email).trim() === '') {
-        throw new BadRequestError('Email is required');
+const validateAdminLoginInput = ({ account, password }) => {
+    if (!account || String(account).trim() === '') {
+        throw new BadRequestError('Account is required');
     }
 
     if (!password || String(password).trim() === '') {

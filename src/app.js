@@ -3,10 +3,12 @@ const express = require('express');
 const app = express();
 const morgan = require('morgan');
 const { default: helmet } = require('helmet');
-const compression = require('compression')
+const compression = require('compression');
+const cors = require('cors');
 
 
 // Middleware 
+app.use(cors());
 app.use(morgan('combined')) // notification when api is called
 app.use(helmet()) //hide tech
 app.use(compression()) //use less bandwidth

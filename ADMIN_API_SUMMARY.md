@@ -1,102 +1,251 @@
-# TỔNG HỢP API ADMIN
+# TỔNG HỢP API ADMIN - QUICK REFERENCE
 
-## Phạm vi hiện tại
+**Base URL:** `/v1/api/admin`
 
-## 1. Xác thực Admin
-
-### `POST /v1/api/admin/auth/login`
-- Đăng nhập bằng `email` và `password`.
-- Chỉ tài khoản có `roles` chứa `admin` mới được đăng nhập.
-- Trả về `accessToken` và `refreshToken`.
-
-### `GET /v1/api/admin/profile`
-- Lấy thông tin admin hiện tại từ JWT.
-- Middleware dùng: `verifyAdmin`.
+**Authentication:** Tất cả endpoint (trừ login) cần `Authorization: Bearer <token>`
 
 ---
 
-## 2. Quản lý Shop
+## 1. Authentication (Xác Thực)
 
-### `GET /v1/api/admin/shops`
-- Lấy danh sách shop.
-- Có phân trang.
-- Lọc theo `status` (`active`, `blocked`).
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| POST | `/auth/login` | Đăng nhập admin | ❌ |
+| GET | `/profile` | Lấy profile admin | ✅ |
 
-### `GET /v1/api/admin/shops/:shopId`
-- Lấy chi tiết shop theo ID.
+**POST /auth/login:**
+- Body: `{ account, password }`
+- Return: `{ admin, tokens }`
 
-### `PATCH /v1/api/admin/shops/:shopId/status`
-- Cập nhật trạng thái shop.
-- Giá trị hợp lệ: `active`, `blocked`.
-
-### `PATCH /v1/api/admin/shops/:shopId/verify`
-- Xác minh shop.
-- Khi verify thành công, shop được đưa về `active`.
+**GET /profile:**
+- Return: Admin info
 
 ---
 
-## 3. Quản lý User
+## 2. Shop Management (Quản Lý Shop)
 
-### `GET /v1/api/admin/users`
-- Lấy danh sách user.
-- Có phân trang.
-- Hỗ trợ lọc theo `status` và tìm kiếm theo `keyword`.
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/shops` | Lấy danh sách shop | ✅ |
+| GET | `/shops/:shopId` | Lấy chi tiết shop | ✅ |
+| PATCH | `/shops/:shopId/status` | Cập nhật status | ✅ |
+| PATCH | `/shops/:shopId/verify` | Xác minh shop | ✅ |
 
-### `GET /v1/api/admin/users/:userId`
-- Lấy chi tiết user.
+**Query Params (GET /shops):**
+- `page`, `limit`
+- `status`: `active|blocked|inactive`
+- `keyword`: tìm kiếm name/email
 
-### `PATCH /v1/api/admin/users/:userId/status`
-- Ban / unban user.
-- Không cho phép ban một tài khoản admin khác.
+**PATCH /shops/:shopId/status:**
+- Body: `{ status: "active|blocked|inactive", reason?: "..." }`
 
----
-
-## 4. Kiểm duyệt Product
-
-### `GET /v1/api/admin/products`
-- Lấy danh sách sản phẩm.
-- Có phân trang.
-- Bao gồm cả sản phẩm chưa public.
-- Có thể lọc theo trạng thái: `pending`, `approved`, `rejected`.
-
-### `PATCH /v1/api/admin/products/:id/status`
-- Duyệt hoặc từ chối sản phẩm.
-- Cập nhật thêm metadata kiểm duyệt (`moderatedBy`, `moderatedAt`, `moderationNote`).
-
-### `DELETE /v1/api/admin/products/:id`
-- Xóa sản phẩm vi phạm / không phù hợp.
+**PATCH /shops/:shopId/verify:**
+- Body: `{}`
 
 ---
 
-## 5. Quản lý Order
+## 3. User Management (Quản Lý User)
 
-### `GET /v1/api/admin/orders`
-- Lấy danh sách đơn hàng.
-- Có phân trang.
-- Lọc theo trạng thái.
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/users` | Lấy danh sách user | ✅ |
+| GET | `/users/:userId` | Lấy chi tiết user | ✅ |
+| PATCH | `/users/:userId/status` | Cập nhật status | ✅ |
 
-### `GET /v1/api/admin/orders/:id`
-- Lấy chi tiết đơn hàng.
+**Query Params (GET /users):**
+- `page`, `limit`
+- `status`: `active|inactive|ban|unban`
+- `keyword`: tìm kiếm name/email
 
-### `PATCH /v1/api/admin/orders/:id/status`
-- Admin có thể override trạng thái đơn hàng để xử lý tranh chấp.
-
----
-
-## 6. Thống kê & Phân tích
-
-### `GET /v1/api/admin/analytics/overview`
-- Trả về:
-   - `totalUsers`
-   - `totalShops`
-   - `totalOrders`
-   - `totalRevenue`
-   - `ordersByStatus`
-   - `topSellingProducts` (top 5)
+**PATCH /users/:userId/status:**
+- Body: `{ status: "active|inactive|ban|unban" }`
+- Lưu ý: Không thể ban admin hoặc chính mình
 
 ---
 
-## 7. Thông báo hàng loạt
+## 4. Product Management (Kiểm Duyệt Sản Phẩm)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/products` | Lấy danh sách product | ✅ |
+| PATCH | `/products/:id/status` | Cập nhật status duyệt | ✅ |
+| DELETE | `/products/:id` | Xóa product | ✅ |
+
+**Query Params (GET /products):**
+- `page`, `limit`
+- `status`: `pending|approved|rejected`
+
+**PATCH /products/:id/status:**
+- Body: `{ status: "pending|approved|rejected", moderationNote?: "..." }`
+
+**DELETE /products/:id:**
+- Body: `{}`
+
+---
+
+## 5. Order Management (Quản Lý Đơn Hàng)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/orders` | Lấy danh sách order | ✅ |
+| GET | `/orders/:id` | Lấy chi tiết order | ✅ |
+| PATCH | `/orders/:id/status` | Cập nhật status | ✅ |
+
+**Query Params (GET /orders):**
+- `page`, `limit`
+- `status`: `pending|confirmed|processing|shipped|delivered|cancelled`
+
+**PATCH /orders/:id/status:**
+- Body: `{ status: "pending|confirmed|processing|shipped|delivered|cancelled", note?: "..." }`
+
+---
+
+## 6. Analytics (Thống Kê)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| GET | `/analytics/overview` | Lấy thống kê tổng quan | ✅ |
+
+**Return:**
+- `overview`: `{ totalUsers, totalShops, totalOrders, totalRevenue }`
+- `ordersByStatus`: thống kê theo trạng thái
+- `topSellingProducts`: 5 sản phẩm bán chạy nhất
+
+---
+
+## 7. Notifications (Thông Báo)
+
+| Method | Endpoint | Mô Tả | Auth |
+|--------|----------|-------|------|
+| POST | `/notifications/send-bulk` | Gửi thông báo hàng loạt | ✅ |
+
+**POST /notifications/send-bulk:**
+- Body: `{ userIds: [], title: "", body: "", type: "", data?: {} }`
+- `type`: `promotion|system|custom|order|promo|test`
+- Return: `{ requestedCount, successCount, failureCount, notifications, failedRecipients }`
+
+---
+
+## Response Format
+
+**Success Response:**
+```json
+{
+  "code": 200,
+  "message": "...",
+  "metadata": { ... }
+}
+```
+
+**Error Response:**
+```json
+{
+  "code": 400|401|403|404|500,
+  "message": "Error message"
+}
+```
+
+---
+
+## Common Query Params
+
+**Pagination:**
+- `page`: số trang (default: 1)
+- `limit`: số item/trang (default: 10, max: 100)
+
+**Response Pagination Object:**
+```json
+{
+  "total": 100,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 10,
+  "hasNextPage": true,
+  "hasPrevPage": false
+}
+```
+
+---
+
+## Status Values
+
+**Shop Status:**
+- `active`: Hoạt động
+- `blocked` / `inactive`: Bị chặn
+
+**User Status:**
+- `active`: Hoạt động (unban)
+- `inactive`: Bị ban
+
+**Product Status:**
+- `pending`: Chờ duyệt
+- `approved`: Phê duyệt
+- `rejected`: Từ chối
+
+**Order Status:**
+- `pending`: Chờ xác nhận
+- `confirmed`: Đã xác nhận
+- `processing`: Đang xử lý
+- `shipped`: Đã gửi
+- `delivered`: Đã giao
+- `cancelled`: Đã hủy
+
+---
+
+## Error Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+
+---
+
+## Example Curl Commands
+
+### Login
+```bash
+curl -X POST http://localhost:3000/v1/api/admin/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"account":"admin","password":"password"}'
+```
+
+### Get Profile
+```bash
+curl -X GET http://localhost:3000/v1/api/admin/profile \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### Get Shops
+```bash
+curl -X GET "http://localhost:3000/v1/api/admin/shops?page=1&limit=10&status=active" \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### Update Shop Status
+```bash
+curl -X PATCH http://localhost:3000/v1/api/admin/shops/SHOP_ID/status \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"blocked","reason":"Vi phạm điều khoản"}'
+```
+
+### Send Bulk Notifications
+```bash
+curl -X POST http://localhost:3000/v1/api/admin/notifications/send-bulk \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userIds":["USER_ID"],
+    "title":"Khuyến mãi",
+    "body":"Giảm 50%",
+    "type":"promotion"
+  }'
+```
 
 ### `POST /v1/api/admin/notifications/send-bulk`
 - Gửi thông báo đến nhiều user cùng lúc.
