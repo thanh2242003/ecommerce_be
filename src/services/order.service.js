@@ -14,13 +14,14 @@ class OrderService {
      * Create a new order — supports both "cart" and "buy_now" flows.
      *
      * Uses a MongoDB transaction (session) to guarantee atomicity:
-     *   1. Order document creation
-     *   2. Stock deduction for every item
-     *   3. Cart clearing (cart mode only)
+     *   1. Extract shopId from product(s)
+     *   2. Order document creation
+     *   3. Stock deduction for every item
+     *   4. Cart clearing (cart mode only)
      *
      * If any step fails the entire transaction is rolled back.
      */
-    static async createOrder({ userId, type, addressId, productId, quantity, color, size }) {
+    static async createOrder({ userId, type, addressId, productId, variantId, quantity }) {
         // ── Validate address ownership ──────────────────────────────
         const addressDoc = await Address.findOne({ _id: addressId, userId });
         if (!addressDoc) {
@@ -32,6 +33,7 @@ class OrderService {
 
         let orderItems = [];
         let totalPrice = 0;
+        let shopId = null;
 
         // ── Start MongoDB transaction ───────────────────────────────
         const session = await mongoose.startSession();
@@ -58,10 +60,27 @@ class OrderService {
                         throw new NotFoundError(`Product not found for cart item`);
                     }
 
-                    // Stock availability check
-                    if (product.salesNumber !== undefined && product.stock !== undefined && product.stock < item.quantity) {
+                    // ── Get variant details ────────────────────────────
+                    const variant = product.getVariant(item.variantId);
+                    if (!variant) {
+                        throw new NotFoundError(`Variant not found for product "${product.title}"`);
+                    }
+
+                    // ── Extract shopId from first product ───────────────
+                    if (!shopId) {
+                        shopId = product.product_shop;
+                        if (!shopId) {
+                            throw new BadRequestError('Product does not belong to any shop');
+                        }
+                    } else if (String(shopId) !== String(product.product_shop)) {
+                        // Validate all products belong to the same shop
+                        throw new BadRequestError('All products in cart must belong to the same shop');
+                    }
+
+                    // ── Check variant stock availability ───────────────
+                    if (variant.stock < item.quantity) {
                         throw new BadRequestError(
-                            `Insufficient stock for "${product.title}". Available: ${product.stock}, Requested: ${item.quantity}`
+                            `Insufficient stock for "${product.title}" (${variant.color}, ${variant.size}). Available: ${variant.stock}, Requested: ${item.quantity}`
                         );
                     }
 
@@ -72,18 +91,19 @@ class OrderService {
                     // Build snapshot item — price & name are frozen at order time
                     orderItems.push({
                         productId: product._id,
+                        variantId: item.variantId,  // ✅ Include variantId
                         productName: product.title,
                         price: itemPrice,
                         quantity: item.quantity,
                         image: (product.images && product.images.length) ? product.images[0] : '',
-                        color: item.color,
-                        size: item.size || null
+                        color: variant.color,        // ✅ From variant
+                        size: variant.size || null   // ✅ From variant
                     });
 
-                    // Deduct stock atomically
+                    // ✅ Deduct stock at variant level
                     await Product.findByIdAndUpdate(
                         product._id,
-                        { $inc: { stock: -item.quantity, salesNumber: item.quantity } },
+                        { $inc: { 'variants.$.stock': -item.quantity, salesNumber: item.quantity } },
                         { session }
                     );
                 }
@@ -99,18 +119,30 @@ class OrderService {
             } else if (type === 'buy_now') {
                 // Validate required fields
                 if (!productId) throw new BadRequestError('productId is required for buy_now');
+                if (!variantId) throw new BadRequestError('variantId is required for buy_now');
                 if (!quantity || quantity < 1) throw new BadRequestError('quantity must be at least 1');
-                if (!color) throw new BadRequestError('color is required for buy_now');
 
                 const product = await Product.findById(productId).session(session);
                 if (!product) {
                     throw new NotFoundError('Product not found');
                 }
 
-                // Stock check
-                if (product.stock !== undefined && product.stock < quantity) {
+                // ── Get variant details ────────────────────────────
+                const variant = product.getVariant(variantId);
+                if (!variant) {
+                    throw new NotFoundError('Variant not found');
+                }
+
+                // ── Extract shopId from product ────────────────────────
+                shopId = product.product_shop;
+                if (!shopId) {
+                    throw new BadRequestError('Product does not belong to any shop');
+                }
+
+                // ── Check variant stock ────────────────────────────────
+                if (variant.stock < quantity) {
                     throw new BadRequestError(
-                        `Insufficient stock for "${product.title}". Available: ${product.stock}, Requested: ${quantity}`
+                        `Insufficient stock for "${product.title}" (${variant.color}, ${variant.size}). Available: ${variant.stock}, Requested: ${quantity}`
                     );
                 }
 
@@ -120,18 +152,19 @@ class OrderService {
                 // Single snapshot item
                 orderItems.push({
                     productId: product._id,
+                    variantId,  // ✅ Include variantId
                     productName: product.title,
                     price: itemPrice,
                     quantity,
                     image: (product.images && product.images.length) ? product.images[0] : '',
-                    color,
-                    size: size || null
+                    color: variant.color,    // ✅ From variant
+                    size: variant.size || null  // ✅ From variant
                 });
 
-                // Deduct stock — DO NOT touch cart
+                // ✅ Deduct stock at variant level
                 await Product.findByIdAndUpdate(
                     product._id,
-                    { $inc: { stock: -quantity, salesNumber: quantity } },
+                    { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
                     { session }
                 );
 
@@ -142,6 +175,7 @@ class OrderService {
             // ── Create the order document ───────────────────────────
             const newOrder = await Order.create([{
                 userId,
+                shopId,
                 receiverName,
                 receiverPhone,
                 address,

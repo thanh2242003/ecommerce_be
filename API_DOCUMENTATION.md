@@ -1,12 +1,294 @@
-# API DOCUMENTATION - CATEGORY & PRODUCT UPDATES
+# API DOCUMENTATION - Complete Reference
 
-## 🆕 NEW CATEGORIES APIs
+## 📋 Table of Contents
+1. [Authentication APIs](#authentication-apis)
+2. [User APIs](#user-apis)
+3. [Category APIs](#category-apis)
+4. [Product APIs](#product-apis)
+5. [Cart APIs](#cart-apis)
+6. [Order APIs](#order-apis)
 
-### 1. Get All Categories (Public)
+---
+
+# AUTHENTICATION APIS
+
+## 1. Register (Sign Up)
+```
+POST /v1/api/access/signup
+```
+**Description:** Đăng ký tài khoản mới
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "John Doe"
+}
+```
+**Response:**
+```json
+{
+  "code": 201,
+  "message": "Register successfully!",
+  "metadata": {
+    "user": {
+      "_id": "user_id",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "roles": ["USER"]
+    },
+    "tokens": {
+      "accessToken": "eyJhbGc...",
+      "refreshToken": "eyJhbGc..."
+    }
+  }
+}
+```
+
+---
+
+## 2. Login
+```
+POST /v1/api/access/login
+```
+**Description:** Đăng nhập với email và password
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Login successfully!",
+  "metadata": {
+    "user": {
+      "_id": "user_id",
+      "email": "user@example.com",
+      "name": "John Doe",
+      "roles": ["USER"]
+    },
+    "tokens": {
+      "accessToken": "eyJhbGc...",
+      "refreshToken": "eyJhbGc..."
+    }
+  }
+}
+```
+
+---
+
+## 3. Refresh Token
+```
+POST /v1/api/access/refresh-token
+```
+**Description:** Làm mới access token bằng refresh token
+**Headers:**
+```
+Authorization: Bearer <refresh_token>
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Refresh token successfully!",
+  "metadata": {
+    "tokens": {
+      "accessToken": "eyJhbGc...",
+      "refreshToken": "eyJhbGc..."
+    }
+  }
+}
+```
+
+---
+
+## 4. Logout
+```
+POST /v1/api/access/logout
+```
+**Description:** Đăng xuất
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Logout successfully!"
+}
+```
+
+---
+
+# USER APIS
+
+## 1. Get Profile
+```
+GET /v1/api/user/profile
+```
+**Description:** Lấy thông tin hồ sơ của user hiện tại
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Get profile successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "phone": "0123456789",
+    "address": "123 Main St, City",
+    "avatar": "https://example.com/avatar.jpg",
+    "status": "active",
+    "verify": false,
+    "roles": ["USER"],
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## 2. Update Profile
+```
+PATCH /v1/api/user/profile
+```
+**Description:** Cập nhật thông tin hồ sơ
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+**Request Body:**
+```json
+{
+  "name": "John Doe Updated",
+  "phone": "0987654321",
+  "address": "456 New St, City",
+  "avatar": "https://example.com/new-avatar.jpg"
+}
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Update profile successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "John Doe Updated",
+    "email": "user@example.com",
+    "phone": "0987654321",
+    "address": "456 New St, City",
+    "avatar": "https://example.com/new-avatar.jpg",
+    "status": "active",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+## 3. Change Password
+```
+PATCH /v1/api/user/password
+```
+**Description:** Đổi mật khẩu
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+**Request Body:**
+```json
+{
+  "oldPassword": "password123",
+  "newPassword": "newPassword456"
+}
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "Password changed successfully!"
+}
+```
+**Error Cases:**
+- `401`: Wrong old password
+- `400`: New password same as old password
+
+---
+
+## 4. Update FCM Token
+```
+PATCH /v1/api/user/fcm-token
+```
+**Description:** Cập nhật FCM token cho push notification
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+**Request Body:**
+```json
+{
+  "fcmToken": "eFp7XXXXXXX..."
+}
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "FCM token updated successfully!"
+}
+```
+
+---
+
+## 5. Remove FCM Token
+```
+DELETE /v1/api/user/fcm-token
+```
+**Description:** Xóa FCM token
+**Headers:**
+```
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+**Request Body:**
+```json
+{
+  "fcmToken": "eFp7XXXXXXX..."
+}
+```
+**Response:**
+```json
+{
+  "code": 200,
+  "message": "FCM token removed successfully!"
+}
+```
+
+---
+
+# CATEGORY APIS
+
+## 1. Get All Categories
 ```
 GET /v1/api/category
 ```
 **Description:** Lấy danh sách tất cả categories
+**Query Parameters:**
+- `isActive` (optional): true/false
+
 **Response:**
 ```json
 {
@@ -17,26 +299,21 @@ GET /v1/api/category
       "_id": "category_id",
       "name": "Quần áo",
       "slug": "quan-ao",
-      "description": "Các loại quần áo, áo sơ mi, áo khoác, etc.",
+      "description": "Các loại quần áo, áo sơ mi, áo khoác",
       "isActive": true,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    // ... more categories
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
   ]
 }
 ```
 
 ---
 
-### 2. Get Category By ID (Public)
+## 2. Get Category By ID
 ```
 GET /v1/api/category/:categoryId
 ```
 **Description:** Lấy chi tiết category theo ID
-**Parameters:**
-- `categoryId` (path): ID của category
-
 **Response:**
 ```json
 {
@@ -46,164 +323,75 @@ GET /v1/api/category/:categoryId
     "_id": "category_id",
     "name": "Quần áo",
     "slug": "quan-ao",
-    "description": "Các loại quần áo, áo sơ mi, áo khoác, etc.",
-    "isActive": true,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
+    "description": "Các loại quần áo",
+    "isActive": true
   }
 }
 ```
 
 ---
 
-### 3. Get Category By Slug (Public)
-```
-GET /v1/api/category/slug/:slug
-```
-**Description:** Lấy chi tiết category theo slug
-**Parameters:**
-- `slug` (path): Slug của category (e.g., "quan-ao", "giay-dep")
-
-**Response:** Same as Get Category By ID
-
----
-
-### 4. Create Category (Admin Only)
+## 3. Create Category (Admin)
 ```
 POST /v1/api/category
 ```
-**Description:** Tạo category mới (chỉ admin mới được tạo)
 **Headers:**
 ```
-x-client-id: <admin_id>
+Authorization: Bearer <admin_token>
 ```
-
 **Request Body:**
 ```json
 {
   "name": "Quần áo",
-  "description": "Các loại quần áo, áo sơ mi, áo khoác, etc."
+  "description": "Các loại quần áo"
 }
 ```
-
-**Response:**
-```json
-{
-  "code": 200,
-  "message": "Create category successfully!",
-  "metadata": {
-    "_id": "category_id",
-    "name": "Quần áo",
-    "slug": "quan-ao",
-    "description": "Các loại quần áo, áo sơ mi, áo khoác, etc.",
-    "adminId": "admin_user_id",
-    "isActive": true,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
-
-**Error Response (Non-Admin):**
-```json
-{
-  "code": 403,
-  "message": "Admin permission required",
-  "status": "error"
-}
-```
+**Response:** See Get Category By ID
 
 ---
 
-### 5. Update Category (Admin Only)
+## 4. Update Category (Admin)
 ```
 PATCH /v1/api/category/:categoryId
 ```
-**Description:** Cập nhật thông tin category (chỉ admin)
 **Headers:**
 ```
-x-client-id: <admin_id>
+Authorization: Bearer <admin_token>
 ```
-
 **Request Body:**
 ```json
 {
   "name": "Quần áo nam",
-  "description": "Các loại quần áo nam",
   "isActive": true
 }
 ```
 
-**Response:** Same as Create Category
-
 ---
 
-### 6. Delete Category (Admin Only)
+## 5. Delete Category (Admin)
 ```
 DELETE /v1/api/category/:categoryId
 ```
-**Description:** Xóa category (soft delete - đặt isActive = false, chỉ admin)
 **Headers:**
 ```
-x-client-id: <admin_id>
-```
-
-**Response:**
-```json
-{
-  "code": 200,
-  "message": "Delete category successfully!",
-  "metadata": {
-    "message": "Category deleted successfully"
-  }
-}
+Authorization: Bearer <admin_token>
 ```
 
 ---
 
-### 7. Seed Default Categories (Admin Only)
-```
-POST /v1/api/category/seed/default
-```
-**Description:** Seed mặc định 6 categories: Quần áo, Giày dép, Đồ chơi, Thực phẩm, Đồ dùng, Khác (chỉ admin)
-**Headers:**
-```
-x-client-id: <admin_id>
-```
+# PRODUCT APIS
 
-**Response:**
-```json
-{
-  "code": 200,
-  "message": "Categories seeded successfully!",
-  "metadata": {
-    "message": "Default categories seeded successfully"
-  }
-}
-```
-
----
-
-## 🔄 UPDATED PRODUCT APIs
-
-### 1. Get All Products (Updated)
+## 1. Get All Products
 ```
 GET /v1/api/product
 ```
-**Description:** Lấy danh sách sản phẩm với các filter
 **Query Parameters:**
-- `categoryId` (optional): Lọc theo category ID
-- `minPrice` (optional): Giá tối thiểu
-- `maxPrice` (optional): Giá tối đa
-- `gender` (optional): Giới tính (0: Nữ, 1: Nam, 2: Unisex)
-- `sort` (optional): Sắp xếp theo field (default: createdAt)
-- `page` (optional): Trang (default: 1)
-- `limit` (optional): Số item mỗi trang (default: 10)
-
-**Example:**
-```
-GET /v1/api/product?categoryId=<id>&minPrice=100000&maxPrice=500000&gender=0&page=1&limit=10
-```
+- `categoryId` (optional): Filter by category
+- `minPrice` (optional): Minimum price
+- `maxPrice` (optional): Maximum price
+- `gender` (optional): 0=Female, 1=Male, 2=Unisex
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 10)
 
 **Response:**
 ```json
@@ -214,187 +402,486 @@ GET /v1/api/product?categoryId=<id>&minPrice=100000&maxPrice=500000&gender=0&pag
     {
       "_id": "product_id",
       "title": "Áo sơ mi nam",
-      "slug": "ao-so-mi-nam",
       "categoryId": "category_id",
       "price": 150000,
       "discountedPrice": 120000,
       "gender": 1,
       "images": ["url1", "url2"],
       "sizes": ["S", "M", "L"],
-      "colors": [
-        {
-          "title": "Trắng",
-          "rgb": [255, 255, 255]
-        }
+      "colors": [{ "title": "White", "rgb": [255, 255, 255] }],
+      "variants": [
+        { "_id": "variant_id", "color": "White", "size": "M", "stock": 10 }
       ],
-      "salesNumber": 10,
-      "description": "Áo sơ mi chất lượng cao",
-      "ratings": 4.5,
-      "reviews": [],
+      "salesNumber": 25,
       "product_type": "Clothing",
-      "product_shop": "shop_id",
-      "isDraft": false,
-      "isPublished": true,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    },
-    // ... more products
-  ]
-}
-```
-
----
-
-### 2. Search Products (Updated)
-```
-GET /v1/api/product/search
-```
-**Description:** Tìm kiếm sản phẩm theo keyword với filter category
-**Query Parameters:**
-- `q` (required): Keyword tìm kiếm
-- `categoryId` (optional): Lọc theo category ID
-
-**Example:**
-```
-GET /v1/api/product/search?q=áo&categoryId=<category_id>
-```
-
-**Response:** Same as Get All Products
-
----
-
-### 3. Create Product (Updated)
-```
-POST /v1/api/product
-```
-**Description:** Tạo sản phẩm mới (yêu cầu categoryId)
-**Headers:**
-```
-Authorization: Bearer <access_token>
-```
-
-**Request Body:**
-```json
-{
-  "title": "Áo sơ mi nam",
-  "product_type": "Clothing",
-  "description": "Áo sơ mi chất lượng cao",
-  "price": 150000,
-  "discountedPrice": 120000,
-  "categoryId": "<category_id>",
-  "gender": 1,
-  "images": ["url1", "url2"],
-  "sizes": ["S", "M", "L"],
-  "colors": [
-    {
-      "title": "Trắng",
-      "rgb": [255, 255, 255]
+      "product_shop": "shop_id"
     }
   ]
 }
 ```
 
-**Response:**
+---
+
+## 2. Search Products
+```
+GET /v1/api/product/search?q=<keyword>
+```
+**Query Parameters:**
+- `q` (required): Search keyword
+- `categoryId` (optional): Filter by category
+
+---
+
+## 3. Get Product By ID
+```
+GET /v1/api/product/:productId
+```
+**Response:** Same as Get All Products
+
+---
+
+## 4. Create Product (Shop)
+```
+POST /v1/api/product
+```
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+**Request Body:**
 ```json
 {
-  "code": 200,
-  "message": "Create new Product successfully!",
-  "metadata": {
-    "_id": "product_id",
-    "title": "Áo sơ mi nam",
-    "slug": "ao-so-mi-nam",
-    "categoryId": "category_id",
-    // ... other fields
-  }
+  "title": "Áo sơ mi nam",
+  "categoryId": "category_id",
+  "price": 150000,
+  "discountedPrice": 120000,
+  "gender": 1,
+  "images": ["url1"],
+  "sizes": ["S", "M", "L"],
+  "colors": [{ "title": "White", "rgb": [255, 255, 255] }],
+  "product_type": "Clothing"
 }
 ```
 
 ---
 
-### 4. Update Product (No Change in API)
+## 5. Update Product
 ```
 PATCH /v1/api/product/:productId
 ```
-**Description:** Cập nhật sản phẩm (giờ đây hỗ trợ update categoryId)
 **Headers:**
 ```
 Authorization: Bearer <access_token>
 ```
 
+---
+
+## 6. Delete Product
+```
+DELETE /v1/api/product/:productId
+```
+
+---
+
+# ADDRESS APIS
+
+## 1. Get All Addresses
+```
+GET /v1/api/address
+```
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+---
+
+## 2. Create Address
+```
+POST /v1/api/address
+```
 **Request Body:**
 ```json
 {
-  "title": "Áo sơ mi nam - updated",
-  "categoryId": "<new_category_id>",
-  "price": 160000
+  "receiverName": "John Doe",
+  "receiverPhone": "0123456789",
+  "address": "123 Main St, City",
+  "isDefault": false
 }
 ```
 
 ---
 
-## 📋 DEFAULT CATEGORIES
-
-Khi khởi tạo hệ thống, 6 categories mặc định sẽ được tạo:
-
-| Name | Slug | Description |
-|------|------|-------------|
-| Quần áo | quan-ao | Các loại quần áo, áo sơ mi, áo khoác, etc. |
-| Giày dép | giay-dep | Giày sneaker, sandal, dép, boot, etc. |
-| Đồ chơi | do-choi | Các loại đồ chơi cho trẻ em |
-| Thực phẩm | thuc-pham | Thực phẩm, đồ uống, bánh kẹo, etc. |
-| Đồ dùng | do-dung | Đồ dùng hàng ngày, gia dụng |
-| Khác | khac | Các sản phẩm khác |
+## 3. Update Address
+```
+PATCH /v1/api/address/:addressId
+```
 
 ---
 
-## 🔧 TECHNICAL CHANGES
-
-### Database Model Changes
-1. **Product Model**: Thay đổi `categoryId` từ String thành `ObjectId` với reference đến Category model
-2. **New Category Model**: Thêm model Category với fields: `name`, `slug`, `description`, `isActive`
-
-### File Changes
-- ✅ Created: `src/models/category.model.js`
-- ✅ Created: `src/services/category.service.js`
-- ✅ Created: `src/controllers/category.controller.js`
-- ✅ Created: `src/routes/category/index.js`
-- ✅ Updated: `src/models/product.model.js` (categoryId type)
-- ✅ Updated: `src/controllers/product.controller.js` (searchProducts, getAllProducts)
-- ✅ Updated: `src/services/product.service.js` (searchProducts)
-- ✅ Updated: `src/routes/index.js` (đăng ký category routes)
+## 4. Delete Address
+```
+DELETE /v1/api/address/:addressId
+```
 
 ---
 
-## 📝 USAGE EXAMPLES
+# CART APIS
 
-### 1. Lấy tất cả categories
-```bash
-curl http://localhost:3000/v1/api/category
+## 1. Add to Cart
+```
+POST /v1/api/cart/add
+```
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+**Request Body:**
+```json
+{
+  "productId": "product_id",
+  "variantId": "variant_id",
+  "quantity": 2
+}
 ```
 
-### 2. Lấy sản phẩm theo category
-```bash
-curl "http://localhost:3000/v1/api/product?categoryId=<category_id>"
+---
+
+## 2. Get Cart
+```
+GET /v1/api/cart
 ```
 
-### 3. Tìm kiếm sản phẩm theo từ khóa và category
-```bash
-curl "http://localhost:3000/v1/api/product/search?q=áo&categoryId=<category_id>"
+---
+
+## 3. Update Cart Item
+```
+POST /v1/api/cart/update
+```
+**Request Body:**
+```json
+{
+  "productId": "product_id",
+  "variantId": "variant_id",
+  "quantity": 3
+}
 ```
 
-### 4. Tạo category mới (Admin Only)
+---
+
+## 4. Remove from Cart
+```
+DELETE /v1/api/cart
+```
+**Request Body:**
+```json
+{
+  "productId": "product_id",
+  "variantId": "variant_id"
+}
+```
+
+---
+
+# ORDER APIS
+
+## 1. Create Order (Cart Checkout)
+```
+POST /v1/api/order/orders
+```
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+**Request Body:**
+```json
+{
+  "type": "cart",
+  "addressId": "address_id"
+}
+```
+
+---
+
+## 2. Create Order (Buy Now)
+```
+POST /v1/api/order/orders
+```
+**Request Body:**
+```json
+{
+  "type": "buy_now",
+  "addressId": "address_id",
+  "productId": "product_id",
+  "variantId": "variant_id",
+  "quantity": 1
+}
+```
+
+---
+
+## 3. Get All Orders
+```
+GET /v1/api/order/orders
+```
+
+---
+
+## 4. Get Order By ID
+```
+GET /v1/api/order/orders/:orderId
+```
+
+---
+
+## 5. Cancel Order
+```
+PATCH /v1/api/order/orders/:orderId/cancel
+```
+
+---
+
+# DISCOUNT APIS
+
+## 1. Get Discount Codes
+```
+GET /v1/api/discount
+```
+
+---
+
+## 2. Apply Discount
+```
+POST /v1/api/discount/apply
+```
+**Request Body:**
+```json
+{
+  "code": "DISCOUNT10"
+}
+```
+
+---
+
+## 2. Mark Notification as Read
+```
+PATCH /v1/api/notification/:notificationId
+```
+
+---
+
+# COMMON RESPONSE FORMATS
+
+## Success Response
+```json
+{
+  "code": 200,
+  "message": "Operation successfully!",
+  "metadata": {
+    // Response data here
+  }
+}
+```
+
+## Error Response
+```json
+{
+  "code": 400,
+  "message": "Error message",
+  "status": "error"
+}
+```
+
+---
+
+# ERROR CODES
+
+| Code | Message | Meaning |
+|------|---------|---------|
+| 200 | OK | Request successful |
+| 201 | Created | Resource created successfully |
+| 400 | Bad Request | Invalid request body/parameters |
+| 401 | Unauthorized | Missing or invalid authentication |
+| 403 | Forbidden | Access denied (insufficient permissions) |
+| 404 | Not Found | Resource not found |
+| 409 | Conflict | Resource already exists |
+| 422 | Unprocessable Entity | Validation error |
+| 500 | Internal Server Error | Server error |
+
+---
+
+# AUTHENTICATION
+
+All protected endpoints require:
+```
+Authorization: Bearer <access_token>
+```
+
+Get access token from Login response.
+
+---
+
+# VARIANT SYSTEM
+
+Products support variants with auto-generated combinations:
+- Each (color × size) combination = unique variant
+- Stock managed at variant level
+- Cart and Order use `variantId` (ObjectId reference to `Product.variants._id`)
+
+Example variant:
+```json
+{
+  "_id": "variant_id",
+  "color": "Black",
+  "size": "M",
+  "stock": 15
+}
+```
+
+---
+
+# SHOP APIs (Summary)
+
+- `GET /v1/api/shop/profile` - Get shop profile
+- `PATCH /v1/api/shop/profile` - Update shop profile
+- `GET /v1/api/shop/products` - Get shop products
+- `GET /v1/api/shop/orders` - Get shop orders
+- `GET /v1/api/shop/stats` - Get shop statistics
+
+---
+
+# ADMIN APIs (Summary)
+
+- `GET /v1/api/admin/users` - Get all users
+- `GET /v1/api/admin/products` - Get all products
+- `GET /v1/api/admin/orders` - Get all orders
+- `GET /v1/api/admin/shops` - Get all shops
+- `POST /v1/api/admin/products/:id/approve` - Approve product
+- `POST /v1/api/admin/products/:id/reject` - Reject product
+- `PATCH /v1/api/admin/users/:id/status` - Update user status
+- `GET /v1/api/admin/analytics` - Get system analytics
+- `GET /v1/api/admin/notifications` - Send notifications to users
+
+---
+
+# INTEGRATION FLOW
+
+## 1. User Registration & Login
+1. POST `/v1/api/access/signup` - Register
+2. POST `/v1/api/access/login` - Login
+3. Get `accessToken` and `refreshToken`
+
+## 2. Browse Products
+1. GET `/v1/api/category` - Get categories
+2. GET `/v1/api/product` - Get products (filter by category)
+3. GET `/v1/api/product/:id` - Get product details with variants
+
+## 3. Shopping
+1. User selects color + size → get `variantId` from variants
+2. POST `/v1/api/cart/add` - Add to cart with variantId
+3. POST `/v1/api/cart/update` - Update quantity
+4. DELETE `/v1/api/cart` - Remove item
+
+## 4. Checkout
+1. POST `/v1/api/address` - Create delivery address (if needed)
+2. GET `/v1/api/discount/apply` - Apply discount code (optional)
+3. POST `/v1/api/order/orders` - Create order (cart mode)
+4. Stock deducted automatically at variant level
+
+## 5. Track Order
+1. GET `/v1/api/order/orders` - List orders
+2. GET `/v1/api/order/orders/:id` - Get order details
+3. PATCH `/v1/api/notification` - Get order updates
+
+---
+
+# USAGE EXAMPLES
+
+## Example 1: Register and Login
 ```bash
-curl -X POST http://localhost:3000/v1/api/category \
-  -H "x-client-id: 680f91f6f01b7d2a2fa9c001" \
+# Sign up
+curl -X POST http://localhost:3000/v1/api/access/signup \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Điện tử",
-    "description": "Các sản phẩm điện tử"
+    "email": "user@example.com",
+    "password": "password123",
+    "name": "John Doe"
+  }'
+
+# Login
+curl -X POST http://localhost:3000/v1/api/access/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
   }'
 ```
 
-### 5. Seed categories mặc định (Admin Only)
+## Example 2: Get Products by Category
 ```bash
-curl -X POST http://localhost:3000/v1/api/category/seed/default \
-  -H "x-client-id: 680f91f6f01b7d2a2fa9c001"
+# Get all categories
+curl http://localhost:3000/v1/api/category
+
+# Get products by category
+curl "http://localhost:3000/v1/api/product?categoryId=<category_id>&limit=10"
+
+# Search products
+curl "http://localhost:3000/v1/api/product/search?q=shirt"
 ```
+
+## Example 3: Add to Cart and Checkout
+```bash
+# Get product with variants
+curl http://localhost:3000/v1/api/product/<product_id> \
+  -H "Authorization: Bearer <access_token>"
+
+# Add to cart
+curl -X POST http://localhost:3000/v1/api/cart/add \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "<product_id>",
+    "variantId": "<variant_id>",
+    "quantity": 2
+  }'
+
+# Create order
+curl -X POST http://localhost:3000/v1/api/order/orders \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "cart",
+    "addressId": "<address_id>"
+  }'
+```
+
+## Example 4: Update Profile
+```bash
+curl -X PATCH http://localhost:3000/v1/api/user/profile \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Jane Doe",
+    "phone": "0987654321",
+    "address": "456 New St, City"
+  }'
+```
+
+---
+
+# BASE URL
+
+```
+http://localhost:3000
+```
+
+or
+
+```
+https://api.example.com
+```
+
+---
+
+**Last Updated:** May 5, 2024
+**Version:** 1.0.0

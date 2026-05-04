@@ -6,40 +6,43 @@ const CartService = require("../services/cart.service");
 class CartController {
 
     // POST /v1/api/cart/add
+    // Body: { productId, variantId, quantity }
     addToCartMobile = async (req, res, next) => {
-        const { productId, quantity, color, size } = req.body;
+        const { productId, variantId, quantity } = req.body;
         const userId = req.user.userId;
 
         new SuccessResponse({
             message: 'Item added to cart successfully!',
             metadata: await CartService.addToCartMobile({
-                userId, productId, quantity, color, size
+                userId, productId, variantId, quantity
             })
         }).send(res);
     }
 
     // POST /v1/api/cart/update
+    // Body: { productId, variantId, quantity }
     update = async (req, res, next) => {
-        const { productId, quantity, color, size } = req.body;
+        const { productId, variantId, quantity } = req.body;
         const userId = req.user.userId;
 
         new SuccessResponse({
             message: 'Update quantity cart successfully!',
             metadata: await CartService.updateQuantity({
-                userId, productId, quantity, color, size
+                userId, productId, variantId, quantity
             })
         }).send(res);
     }
 
     // DELETE /v1/api/cart
+    // Body: { productId, variantId }
     delete = async (req, res, next) => {
-        const { productId, color, size } = req.body;
+        const { productId, variantId } = req.body;
         const userId = req.user.userId;
 
         new SuccessResponse({
             message: 'Delete cart item successfully!',
             metadata: await CartService.deleteCartItem({
-                userId, productId, color, size
+                userId, productId, variantId
             })
         }).send(res);
     }

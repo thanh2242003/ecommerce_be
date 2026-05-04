@@ -9,7 +9,10 @@ class OrderController {
      * POST /orders
      *
      * Body (cart mode):    { type: "cart", addressId }
-     * Body (buy_now mode): { type: "buy_now", addressId, productId, quantity, color }
+     * Body (buy_now mode): { type: "buy_now", addressId, productId, variantId, quantity }
+     * 
+     * Note: shopId is automatically extracted from product data in the database
+     *       color and size are taken from variant data
      */
     createOrder = async (req, res, next) => {
         const userId = req.user.userId;

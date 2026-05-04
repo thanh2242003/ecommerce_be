@@ -9,6 +9,20 @@ const { authenticationV2 } = require('../../auth/authUtils');
 
 // Protected: cần token
 router.use(authenticationV2);
+
+// GET /v1/api/user/profile
 router.get('/profile', asyncHandler(UserController.getProfile));
+
+// PATCH /v1/api/user/profile
+router.patch('/profile', asyncHandler(UserController.updateProfile));
+
+// PATCH /v1/api/user/password
+router.patch('/password', asyncHandler(UserController.changePassword));
+
+// PATCH /v1/api/user/fcm-token
+router.patch('/fcm-token', asyncHandler(UserController.updateFcmToken));
+
+// DELETE /v1/api/user/fcm-token
+router.delete('/fcm-token', asyncHandler(UserController.removeFcmToken));
 
 module.exports = router;

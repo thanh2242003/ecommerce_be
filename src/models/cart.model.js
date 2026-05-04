@@ -7,11 +7,9 @@ const COLLECTION_NAME = 'Carts';
 
 const cartItemSchema = new Schema({
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-    variantId: { type: String, default: null },
+    variantId: { type: Schema.Types.ObjectId, required: true },  // Reference to Product.variants._id
     quantity: { type: Number, required: true, min: 1 },
-    price: { type: Number, required: true },
-    color: { type: String, required: true },
-    size: { type: String, default: null }
+    price: { type: Number, required: true }
 }, { _id: false });
 
 const cartSchema = new Schema({

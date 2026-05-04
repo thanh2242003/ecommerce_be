@@ -58,10 +58,6 @@ const productSchema = new Schema({
     enum: ['Electronic', 'Clothing', 'Furniture'],
     required: true
   },
-  // product_attributes: {
-  //     type: Schema.Types.Mixed,
-  //     default: {}
-  // },
   product_shop: {
     type: Schema.Types.ObjectId,
     ref: 'Shop'
@@ -75,6 +71,10 @@ const productSchema = new Schema({
   collection: COLLECTION_NAME
 });
 
+// ──────────────────────────────────────────────────────────────────────────
+// HOOKS
+// ──────────────────────────────────────────────────────────────────────────
+
 productSchema.pre('save', function (next) {
   this.slug = slugify(this.title, { lower: true });
   
@@ -83,6 +83,10 @@ productSchema.pre('save', function (next) {
   
   next();
 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// INSTANCE METHODS
+// ──────────────────────────────────────────────────────────────────────────
 
 /**
  * Auto-generate all (color × size) combinations as variants
@@ -144,6 +148,10 @@ productSchema.methods.hasStock = function(variantId, quantity = 1) {
   return variant && variant.stock >= quantity;
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// STATIC METHODS
+// ──────────────────────────────────────────────────────────────────────────
+
 /**
  * Static: Update variant stock by variantId
  * Usage: Product.updateVariantStock(productId, variantId, -1)
@@ -163,11 +171,23 @@ productSchema.statics.getProductWithVariants = function(productId) {
   return this.findById(productId).select('colors sizes variants price discountedPrice');
 };
 
+// ──────────────────────────────────────────────────────────────────────────
+// INDEXES
+// ──────────────────────────────────────────────────────────────────────────
+
 // Thêm text index cho search
 productSchema.index({
   title: 'text',
   description: 'text'
 });
+
+// Index for variant queries
+productSchema.index({ 'variants.color': 1, 'variants.size': 1 });
+
+// ──────────────────────────────────────────────────────────────────────────
+// SERIALIZATION
+// ──────────────────────────────────────────────────────────────────────────
+
 productSchema.set('toJSON', {
   transform: (doc, ret) => {
     ret._id = ret._id.toString();
@@ -197,4 +217,3 @@ productSchema.set('toJSON', {
 });
 
 module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);
-

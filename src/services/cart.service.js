@@ -5,26 +5,13 @@ const { cart } = require('../models/cart.model');
 const { getProductById } = require('../models/repositories/product.repo');
 
 /**
- * Cart Service — variantId is auto-generated from color + size.
- *
- * variantId format: `{color}_{size}` (lowercase, trimmed)
- *   e.g. "red_xl", "blue_nosize"
- *
- * All matching uses: product + variantId (unique per variant).
+ * Cart Service — uses variantId from Product.variants._id
  */
 class CartService {
 
     // ──────────────────────────────────────────────────────────
     //  HELPERS
     // ──────────────────────────────────────────────────────────
-
-    /**
-     * Generate a deterministic variantId from color + size.
-     */
-    static _generateVariantId(color, size) {
-        const normalize = (v) => v?.toLowerCase().trim();
-        return `${normalize(color)}_${normalize(size) || 'nosize'}`;
-    }
 
     /**
      * Recalculate totalPrice from items array.
@@ -53,13 +40,20 @@ class CartService {
     //  ADD TO CART
     // ──────────────────────────────────────────────────────────
 
-    static async addToCartMobile({ userId, productId, quantity, color, size }) {
+    /**
+     * Add item to cart using variantId
+     * @param {string} userId - User ID
+     * @param {string} productId - Product ID
+     * @param {string} variantId - Variant ID (reference to Product.variants._id)
+     * @param {number} quantity - Quantity to add
+     */
+    static async addToCartMobile({ userId, productId, variantId, quantity }) {
         // ── Validate input ──────────────────────────────────────
-        if (!productId || typeof quantity !== 'number' || !color) {
-            throw new BadRequestError('Invalid input');
+        if (!productId || !variantId || typeof quantity !== 'number' || quantity < 1) {
+            throw new BadRequestError('productId, variantId, and quantity (>= 1) are required');
         }
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            throw new BadRequestError('Invalid product ID format');
+        if (!mongoose.Types.ObjectId.isValid(productId) || !mongoose.Types.ObjectId.isValid(variantId)) {
+            throw new BadRequestError('Invalid productId or variantId format');
         }
 
         // ── Fetch product & determine price ─────────────────────
@@ -68,12 +62,15 @@ class CartService {
             throw new NotFoundError('Product not found');
         }
 
+        // Get variant to verify it exists
+        const variant = foundProduct.getVariant(variantId);
+        if (!variant) {
+            throw new NotFoundError('Variant not found');
+        }
+
         const price = (foundProduct.discountedPrice && foundProduct.discountedPrice > 0)
             ? foundProduct.discountedPrice
             : foundProduct.price || 0;
-
-        // ── Generate variantId ──────────────────────────────────
-        const variantId = this._generateVariantId(color, size);
 
         // ── Find or create cart ─────────────────────────────────
         let userCart = await cart.findOne({ user: userId });
@@ -90,26 +87,19 @@ class CartService {
         const existingIdx = userCart.items.findIndex(
             item =>
                 item.product.toString() === productId.toString() &&
-                item.variantId === variantId
+                item.variantId.toString() === variantId.toString()
         );
 
         if (existingIdx !== -1) {
             // Item exists → increase quantity
             userCart.items[existingIdx].quantity += quantity;
-
-            // quantity ≤ 0 → remove item
-            if (userCart.items[existingIdx].quantity <= 0) {
-                userCart.items.splice(existingIdx, 1);
-            }
-        } else if (quantity > 0) {
+        } else {
             // New item → push
             userCart.items.push({
                 product: productId,
                 variantId,
                 quantity,
-                price,
-                color,
-                size: size || null
+                price
             });
         }
 
@@ -121,9 +111,15 @@ class CartService {
     //  UPDATE QUANTITY
     // ──────────────────────────────────────────────────────────
 
-    static async updateQuantity({ userId, productId, quantity, color, size }) {
-        if (!productId || typeof quantity !== 'number' || !color) {
-            throw new BadRequestError('productId, quantity, and color are required');
+    /**
+     * Update quantity of cart item using variantId
+     */
+    static async updateQuantity({ userId, productId, variantId, quantity }) {
+        if (!productId || !variantId || typeof quantity !== 'number') {
+            throw new BadRequestError('productId, variantId, and quantity are required');
+        }
+        if (!mongoose.Types.ObjectId.isValid(productId) || !mongoose.Types.ObjectId.isValid(variantId)) {
+            throw new BadRequestError('Invalid productId or variantId format');
         }
 
         const userCart = await cart.findOne({ user: userId });
@@ -131,12 +127,10 @@ class CartService {
             throw new NotFoundError('Cart not found');
         }
 
-        const variantId = this._generateVariantId(color, size);
-
         const idx = userCart.items.findIndex(
             item =>
                 item.product.toString() === productId.toString() &&
-                item.variantId === variantId
+                item.variantId.toString() === variantId.toString()
         );
 
         if (idx === -1) {
@@ -159,12 +153,16 @@ class CartService {
     //  DELETE CART ITEM
     // ──────────────────────────────────────────────────────────
 
-    static async deleteCartItem({ userId, productId, color, size }) {
-        if (!productId || !color) {
-            throw new BadRequestError('productId and color are required');
+    /**
+     * Delete cart item using variantId
+     */
+    static async deleteCartItem({ userId, productId, variantId }) {
+        if (!productId || !variantId) {
+            throw new BadRequestError('productId and variantId are required');
         }
-
-        const variantId = this._generateVariantId(color, size);
+        if (!mongoose.Types.ObjectId.isValid(productId) || !mongoose.Types.ObjectId.isValid(variantId)) {
+            throw new BadRequestError('Invalid productId or variantId format');
+        }
 
         const result = await cart.findOneAndUpdate(
             { user: userId },
@@ -172,7 +170,7 @@ class CartService {
                 $pull: {
                     items: {
                         product: new mongoose.Types.ObjectId(productId),
-                        variantId
+                        variantId: new mongoose.Types.ObjectId(variantId)
                     }
                 }
             },
@@ -195,45 +193,11 @@ class CartService {
         const userCart = await cart.findOne({ user: userId })
             .populate({
                 path: 'items.product',
-                select: 'title images price discountedPrice colors sizes slug'
+                select: 'title images price discountedPrice colors sizes variants slug'
             })
             .lean();
 
-        if (!userCart) return null;
-
-        // Backward compat: auto-fill variantId for old items that don't have it
-        let needsSave = false;
-        for (const item of userCart.items) {
-            if (!item.variantId && item.color) {
-                item.variantId = this._generateVariantId(item.color, item.size);
-                needsSave = true;
-            }
-        }
-
-        // Persist generated variantIds for old items (fire-and-forget)
-        if (needsSave) {
-            const bulkOps = userCart.items
-                .filter(item => item.variantId)
-                .map(item => ({
-                    updateOne: {
-                        filter: {
-                            _id: userCart._id,
-                            'items.product': item.product._id || item.product,
-                            'items.color': item.color,
-                            'items.size': item.size || null
-                        },
-                        update: {
-                            $set: { 'items.$.variantId': item.variantId }
-                        }
-                    }
-                }));
-
-            if (bulkOps.length) {
-                cart.bulkWrite(bulkOps).catch(() => {}); // fire-and-forget
-            }
-        }
-
-        return userCart;
+        return userCart || null;
     }
 }
 

@@ -8,12 +8,13 @@ const COLLECTION_NAME = 'Orders';
 // Snapshot of each product at the time of order — prices are frozen here
 const orderItemSchema = new Schema({
     productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+    variantId: { type: Schema.Types.ObjectId, required: true },  // Reference to Product.variants._id
     productName: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true, min: 1 },
     image: { type: String, required: true },
-    color: { type: String, required: true },
-    size: { type: String, default: null }
+    color: { type: String },  // Optional: snapshot of variant color
+    size: { type: String }    // Optional: snapshot of variant size
 }, { _id: false });
 
 const orderSchema = new Schema({

@@ -47,7 +47,7 @@ const shopAuthenticationV2 = asyncHandler(async (req, res, next) => {
         }
 
         // Verify user is a shop owner
-        const shop = await shopModel.findById(decodeUser.shopId);
+        const shop = await shopModel.findById(decodeUser.userId);
 
         if (!shop) {
             throw new NotFoundError('Shop not found');
