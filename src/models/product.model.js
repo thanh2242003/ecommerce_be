@@ -53,11 +53,6 @@ const productSchema = new Schema({
   moderatedBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   moderatedAt: { type: Date, default: null },
   moderationNote: { type: String, default: '', trim: true },
-  product_type: {
-    type: String,
-    enum: ['Electronic', 'Clothing', 'Furniture'],
-    required: true
-  },
   // product_attributes: {
   //     type: Schema.Types.Mixed,
   //     default: {}
@@ -78,8 +73,10 @@ const productSchema = new Schema({
 productSchema.pre('save', function (next) {
   this.slug = slugify(this.title, { lower: true });
   
-  // ── Auto-generate variants when sizes or colors change ──────────
-  this.generateVariants();
+  // Keep provided variants on create/update; fall back to auto-generation only when needed.
+  if (!Array.isArray(this.variants) || this.variants.length === 0) {
+    this.generateVariants();
+  }
   
   next();
 });
@@ -149,8 +146,8 @@ productSchema.methods.hasStock = function(variantId, quantity = 1) {
  * Usage: Product.updateVariantStock(productId, variantId, -1)
  */
 productSchema.statics.updateVariantStock = function(productId, variantId, increment) {
-  return this.findByIdAndUpdate(
-    productId,
+  return this.findOneAndUpdate(
+    { _id: productId, 'variants._id': variantId },
     { $inc: { 'variants.$.stock': increment } },
     { new: true }
   );

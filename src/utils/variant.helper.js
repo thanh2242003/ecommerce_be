@@ -71,8 +71,8 @@ class VariantHelper {
     const options = { new: true };
     if (session) options.session = session;
 
-    const product = await Product.findByIdAndUpdate(
-      productId,
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, 'variants._id': variantId },
       { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
       options
     );
@@ -95,8 +95,8 @@ class VariantHelper {
     const options = { new: true };
     if (session) options.session = session;
 
-    const product = await Product.findByIdAndUpdate(
-      productId,
+    const product = await Product.findOneAndUpdate(
+      { _id: productId, 'variants._id': variantId },
       { $inc: { 'variants.$.stock': quantity, salesNumber: -quantity } },
       options
     );

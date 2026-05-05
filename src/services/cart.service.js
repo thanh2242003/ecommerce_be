@@ -197,6 +197,28 @@ class CartService {
             })
             .lean();
 
+        if (!userCart) return null;
+
+        // Attach matching color and size from product.variants into each cart item
+        userCart.items = (userCart.items || []).map(item => {
+            try {
+                const product = item.product || {};
+                const variants = product.variants || [];
+                const matched = variants.find(v => String(v._id) === String(item.variantId));
+                if (matched) {
+                    item.color = matched.color;
+                    item.size = matched.size;
+                } else {
+                    item.color = null;
+                    item.size = null;
+                }
+            } catch (e) {
+                item.color = null;
+                item.size = null;
+            }
+            return item;
+        });
+
         return userCart || null;
     }
 }

@@ -9,7 +9,6 @@ class ProductController {
     createProduct = async (req, res, next) => {
         const payload = {
             productId: req.body.productId,
-            product_type: req.body.product_type,
             title: req.body.title || req.body.product_name,
             description: req.body.description || req.body.product_description,
             price: req.body.price || req.body.product_price,
@@ -20,13 +19,13 @@ class ProductController {
             sizes: req.body.sizes || req.body.product_sizes || [],
             //product_attributes: req.body.product_attributes || {},
             colors: req.body.colors || [],
+            variants: req.body.variants || [],
             product_shop: req.user.userId
         }
 
         new SuccessResponse({
             message: 'Create new Product successfully!',
             metadata: await ProductFactory.createProduct(
-                payload.product_type,
                 payload
             )
         }).send(res);

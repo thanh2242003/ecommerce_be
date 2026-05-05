@@ -31,16 +31,64 @@ function formatProductsList(list) {
     return Array.isArray(list) ? list.map(formatProductResponse) : [];
 }
 
+function normalizeText(value) {
+    return String(value ?? '').trim();
+}
+
+function validateProductVariants({ sizes, colors, variants }) {
+    if (!Array.isArray(sizes) || sizes.length === 0) {
+        throw new BadRequestError('Missing required fields: sizes');
+    }
+
+    if (!Array.isArray(colors) || colors.length === 0) {
+        throw new BadRequestError('Missing required fields: colors');
+    }
+
+    if (!Array.isArray(variants) || variants.length === 0) {
+        throw new BadRequestError('Missing required fields: variants');
+    }
+
+    const validSizes = new Set(sizes.map(normalizeText));
+    const validColors = new Set(colors.map((color) => normalizeText(color?.title)));
+    const seenKeys = new Set();
+
+    variants.forEach((variant, index) => {
+        const variantColor = normalizeText(variant?.color);
+        const variantSize = normalizeText(variant?.size);
+
+        if (!variantColor || !variantSize) {
+            throw new BadRequestError(`Variant ${index + 1} must have color and size`);
+        }
+
+        if (!validColors.has(variantColor)) {
+            throw new BadRequestError(
+                `Variant ${index + 1} has invalid color "${variantColor}". Available colors: ${Array.from(validColors).join(', ')}`
+            );
+        }
+
+        if (!validSizes.has(variantSize)) {
+            throw new BadRequestError(
+                `Variant ${index + 1} has invalid size "${variantSize}". Available sizes: ${Array.from(validSizes).join(', ')}`
+            );
+        }
+
+        if (variant.stock !== undefined && (typeof variant.stock !== 'number' || Number.isNaN(variant.stock) || variant.stock < 0)) {
+            throw new BadRequestError(`Variant ${index + 1} stock must be a number greater than or equal to 0`);
+        }
+
+        const key = `${variantColor}::${variantSize}`;
+        if (seenKeys.has(key)) {
+            throw new BadRequestError(`Duplicate variant detected for ${variantColor} / ${variantSize}`);
+        }
+
+        seenKeys.add(key);
+    });
+}
+
 
 // ================= PRODUCT FACTORY =================
 class ProductFactory {
-    static async createProduct(type, payload) {
-        const validTypes = ['Clothing', 'Electronic', 'Furniture']
-
-        if (!validTypes.includes(type)) {
-            throw new BadRequestError('Invalid product type')
-        }
-
+    static async createProduct(payload) {
         return new ProductService(payload).createProduct()
     }
 }
@@ -58,7 +106,7 @@ class ProductService {
         images,
         sizes,
         colors,
-        product_type,
+        variants,
         //product_attributes,
         product_shop
     }) {
@@ -71,7 +119,7 @@ class ProductService {
         this.images = images
         this.sizes = sizes
         this.colors = colors
-        this.product_type = product_type
+        this.variants = variants
         //this.product_attributes = product_attributes
         this.product_shop = product_shop
     }
@@ -83,6 +131,12 @@ class ProductService {
             throw new BadRequestError('Missing required fields')
         }
 
+        validateProductVariants({
+            sizes: this.sizes,
+            colors: this.colors,
+            variants: this.variants
+        });
+
         const newProduct = await Product.create({
             title: this.title,
             description: this.description,
@@ -93,7 +147,7 @@ class ProductService {
             images: this.images || [],
             sizes: this.sizes || [],
             colors: this.colors || [],
-            product_type: this.product_type,
+            variants: this.variants,
             product_shop: this.product_shop,
             salesNumber: 0,
             reviews: []

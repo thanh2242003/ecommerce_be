@@ -21,7 +21,7 @@ class OrderService {
      *
      * If any step fails the entire transaction is rolled back.
      */
-    static async createOrder({ userId, type, addressId, productId, variantId, quantity }) {
+    static async createOrder({ userId, type, addressId, productId, variantId, quantity, finalPrice }) {
         // ── Validate address ownership ──────────────────────────────
         const addressDoc = await Address.findOne({ _id: addressId, userId });
         if (!addressDoc) {
@@ -101,8 +101,8 @@ class OrderService {
                     });
 
                     // ✅ Deduct stock at variant level
-                    await Product.findByIdAndUpdate(
-                        product._id,
+                    await Product.findOneAndUpdate(
+                        { _id: product._id, 'variants._id': item.variantId },
                         { $inc: { 'variants.$.stock': -item.quantity, salesNumber: item.quantity } },
                         { session }
                     );
@@ -162,8 +162,8 @@ class OrderService {
                 });
 
                 // ✅ Deduct stock at variant level
-                await Product.findByIdAndUpdate(
-                    product._id,
+                await Product.findOneAndUpdate(
+                    { _id: product._id, 'variants._id': variantId },
                     { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
                     { session }
                 );
@@ -173,6 +173,12 @@ class OrderService {
             }
 
             // ── Create the order document ───────────────────────────
+            const serverFinalPrice = Math.max(0, totalPrice);
+
+            if (typeof finalPrice === 'number' && finalPrice !== serverFinalPrice) {
+                throw new BadRequestError('Giá đã được cập nhật, vui lòng refresh lại trang');
+            }
+
             const newOrder = await Order.create([{
                 userId,
                 shopId,
@@ -181,6 +187,8 @@ class OrderService {
                 address,
                 items: orderItems,
                 totalPrice,
+                discountAmount: 0,
+                finalPrice: serverFinalPrice,
                 status: 'pending'
             }], { session });
 

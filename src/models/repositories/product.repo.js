@@ -123,7 +123,7 @@ const updateProductById = async ({ productId, bodyUpdate, model, isNew = true })
 
 const getProductById = async (productId) => {
     if (!Types.ObjectId.isValid(productId)) return null;
-    return await Product.findById(productId).lean()
+    return await Product.findById(productId);
 }
 
 const checkProductByServer = async (products) => {
