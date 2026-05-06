@@ -43,30 +43,30 @@ router.post('/:productId/reviews', asyncHandler(ProductController.addReview));
 
 /*
 ========================
-        SHOP APIs
+        SHOP APIs (requires shopAuthenticationV2)
 ========================
 */
 
 // CREATE
-router.post('/', asyncHandler(ProductController.createProduct));
+router.post('/', shopAuthenticationV2, asyncHandler(ProductController.createProduct));
 
 // UPDATE
-router.patch('/:productId', asyncHandler(ProductController.updateProduct));
+router.patch('/:productId', shopAuthenticationV2, asyncHandler(ProductController.updateProduct));
 
 // DELETE (hard delete)
-router.delete('/:productId', asyncHandler(ProductController.deleteProduct));
+router.delete('/:productId', shopAuthenticationV2, asyncHandler(ProductController.deleteProduct));
 
 // DRAFTS
-router.get('/shop/drafts', asyncHandler(ProductController.getAllDraftForShop));
+router.get('/shop/drafts', shopAuthenticationV2, asyncHandler(ProductController.getAllDraftForShop));
 
 // PUBLISHED
-router.get('/shop/published', asyncHandler(ProductController.getAllPublishForShop));
+router.get('/shop/published', shopAuthenticationV2, asyncHandler(ProductController.getAllPublishForShop));
 
 // PUBLISH
-router.patch('/:productId/publish', asyncHandler(ProductController.publishProduct));
+router.patch('/:productId/publish', shopAuthenticationV2, asyncHandler(ProductController.publishProduct));
 
 // UNPUBLISH
-router.patch('/:productId/unpublish', asyncHandler(ProductController.unPublishProduct));
+router.patch('/:productId/unpublish', shopAuthenticationV2, asyncHandler(ProductController.unPublishProduct));
 
 /*
 ========================

@@ -20,7 +20,7 @@ class ProductController {
             //product_attributes: req.body.product_attributes || {},
             colors: req.body.colors || [],
             variants: req.body.variants || [],
-            product_shop: req.user.userId
+            product_shop: req.shopId
         }
 
         new SuccessResponse({
@@ -38,8 +38,9 @@ class ProductController {
                 req.params.productId,
                 {
                     ...req.body,
-                    product_shop: req.user.userId
-                }
+                    product_shop: req.shopId
+                },
+                req.shopId
             )
         }).send(res);
     }
@@ -47,7 +48,7 @@ class ProductController {
     deleteProduct = async (req, res, next) => {
         new SuccessResponse({
             message: 'Delete product successfully!',
-            metadata: await ProductService.deleteProduct(req.params.productId)
+            metadata: await ProductService.deleteProduct(req.params.productId, req.shopId)
         }).send(res);
     }
 
@@ -120,7 +121,7 @@ class ProductController {
         new SuccessResponse({
             message: 'Get draft products successfully!',
             metadata: await ProductService.getProducts({
-                product_shop: req.user.userId,
+                product_shop: req.shopId,
                 isDraft: true
             })
         }).send(res);
@@ -130,7 +131,7 @@ class ProductController {
         new SuccessResponse({
             message: 'Get published products successfully!',
             metadata: await ProductService.getProducts({
-                product_shop: req.user.userId,
+                product_shop: req.shopId,
                 isPublished: true
             })
         }).send(res);
@@ -141,7 +142,8 @@ class ProductController {
             message: 'Publish product successfully!',
             metadata: await ProductService.updateProduct(
                 req.params.productId,
-                { isDraft: false, isPublished: true }
+                { isDraft: false, isPublished: true },
+                req.shopId
             )
         }).send(res);
     }
@@ -151,7 +153,8 @@ class ProductController {
             message: 'Unpublish product successfully!',
             metadata: await ProductService.updateProduct(
                 req.params.productId,
-                { isDraft: true, isPublished: false }
+                { isDraft: true, isPublished: false },
+                req.shopId
             )
         }).send(res);
     }

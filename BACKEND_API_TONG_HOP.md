@@ -107,18 +107,18 @@ HTTP code pho bien: 200, 201, 400, 401, 403, 404, 409, 500.
 | GET | /v1/api/product/ | Khong | Danh sach san pham |
 | GET | /v1/api/product/:productId | Khong | Chi tiet san pham |
 
-### 7.2 Protected
+### 7.2 Protected (Shop only - requires shopAuthenticationV2)
 
 | Method | Endpoint | Auth | Mo ta |
 |---|---|---|---|
 | POST | /v1/api/product/:productId/reviews | User token | Them danh gia |
-| POST | /v1/api/product/ | User/Shop token | Tao san pham (theo code hien tai) |
-| PATCH | /v1/api/product/:productId | User/Shop token | Sua san pham (theo code hien tai) |
-| DELETE | /v1/api/product/:productId | User/Shop token | Xoa cung san pham |
-| GET | /v1/api/product/shop/drafts | User/Shop token | San pham nhap |
-| GET | /v1/api/product/shop/published | User/Shop token | San pham da publish |
-| PATCH | /v1/api/product/:productId/publish | User/Shop token | Publish san pham |
-| PATCH | /v1/api/product/:productId/unpublish | User/Shop token | Unpublish san pham |
+| POST | /v1/api/product/ | Shop token | Tao san pham |
+| PATCH | /v1/api/product/:productId | Shop token | Sua san pham |
+| DELETE | /v1/api/product/:productId | Shop token | Xoa cung san pham |
+| GET | /v1/api/product/shop/drafts | Shop token | San pham nhap |
+| GET | /v1/api/product/shop/published | Shop token | San pham da publish |
+| PATCH | /v1/api/product/:productId/publish | Shop token | Publish san pham |
+| PATCH | /v1/api/product/:productId/unpublish | Shop token | Unpublish san pham |
 
 ### 7.3 Shop soft delete APIs
 
@@ -307,7 +307,7 @@ HTTP code pho bien: 200, 201, 400, 401, 403, 404, 409, 500.
 
 ## 17) Ghi chu quan trong
 
-- Duong dan product shop API dang nam sau authenticationV2, khong gan truc tiep shopAuthenticationV2 (tru nhom soft-delete). Neu can gioi han chi shop, nen bo sung middleware shopAuthenticationV2 cho cac route tao/sua/xoa/publish.
+- **Product shop API (tạo/sửa/xóa/publish)** hiện dùng `shopAuthenticationV2` để chỉ shop được phép. Service kiểm tra ownership để shop chỉ sửa/xóa sản phẩm của chính mình.
 - Co trung lap endpoint shop signin/signup o 2 noi:
   - /v1/api/shop/* (router shop)
   - /v1/api/shop/* (router access)
@@ -605,7 +605,7 @@ Quy uoc Header:
 - rating hop le: 0..5
 
 7) POST /v1/api/product/
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Body bat buoc toi thieu: { title (hoac product_name), price (hoac product_price), variants }
 - Body thuong dung:
   {
@@ -637,30 +637,30 @@ Quy uoc Header:
 - Neu khong gui stock cho tung variant, backend mac dinh stock = 0
 
 8) PATCH /v1/api/product/:productId
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Params: productId
 - Body: cac field can update cua product
 
 9) DELETE /v1/api/product/:productId
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Params: productId
 - Body: none
 
 10) GET /v1/api/product/shop/drafts
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Body: none
 
 11) GET /v1/api/product/shop/published
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Body: none
 
 12) PATCH /v1/api/product/:productId/publish
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Params: productId
 - Body: none
 
 13) PATCH /v1/api/product/:productId/unpublish
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (shop token)
 - Params: productId
 - Body: none
 

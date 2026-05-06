@@ -253,10 +253,21 @@ class ProductService {
     }
 
     // ================= UPDATE =================
-    static async updateProduct(productId, payload) {
+    static async updateProduct(productId, payload, shopId) {
         if (!Types.ObjectId.isValid(productId)) {
             throw new BadRequestError('Invalid product ID format')
         }
+        
+        // Verify ownership if shopId is provided
+        if (shopId) {
+            const product = await Product.findById(productId);
+            if (!product) throw new BadRequestError('Product not found');
+            
+            if (String(product.product_shop) !== String(shopId)) {
+                throw new BadRequestError('You do not have permission to update this product')
+            }
+        }
+        
         const updated = await Product.findByIdAndUpdate(
             productId,
             payload,
@@ -269,10 +280,21 @@ class ProductService {
     }
 
     // ================= DELETE =================
-    static async deleteProduct(productId) {
+    static async deleteProduct(productId, shopId) {
         if (!Types.ObjectId.isValid(productId)) {
             throw new BadRequestError('Invalid product ID format')
         }
+        
+        // Verify ownership if shopId is provided
+        if (shopId) {
+            const product = await Product.findById(productId);
+            if (!product) throw new BadRequestError('Product not found');
+            
+            if (String(product.product_shop) !== String(shopId)) {
+                throw new BadRequestError('You do not have permission to delete this product')
+            }
+        }
+        
         const deleted = await Product.findByIdAndDelete(productId)
 
         if (!deleted) throw new BadRequestError('Delete failed')

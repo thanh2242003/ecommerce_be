@@ -59,7 +59,8 @@ const shopAuthenticationV2 = asyncHandler(async (req, res, next) => {
         // Attach user and shop info to request
         req.user = decodeUser;
         req.keyStore = keyStore;
-        req.shopId = decodeUser.shopId;
+        // Shop token payload stores shop identifier in `userId`
+        req.shopId = decodeUser.userId;
         req.shop = shop;
 
         return next();
@@ -87,12 +88,13 @@ const optionalShopAuth = async (req, res, next) => {
         const decodeUser = JWT.verify(accessToken, keyStore.publicKey);
         if (userId !== decodeUser.userId) return next();
 
-        const shop = await shopModel.findById(decodeUser.shopId);
+        const shop = await shopModel.findById(decodeUser.userId);
         if (!shop) return next();
 
         req.user = decodeUser;
         req.keyStore = keyStore;
-        req.shopId = decodeUser.shopId;
+        // Keep the same identifier mapping as shopAuthenticationV2
+        req.shopId = decodeUser.userId;
         req.shop = shop;
 
     } catch (_) {
