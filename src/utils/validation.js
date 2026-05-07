@@ -90,9 +90,10 @@ const validateInventoryData = (inventoryData) => {
                     `Variant ${idx + 1} must have size and color`
                 );
             }
-            if (variant.quantity < 0) {
+            const stockValue = variant.stock ?? variant.quantity;
+            if (stockValue === undefined || stockValue < 0) {
                 throw new BadRequestError(
-                    `Variant ${idx + 1} quantity cannot be negative`
+                    `Variant ${idx + 1} stock cannot be negative`
                 );
             }
         });

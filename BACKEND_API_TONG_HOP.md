@@ -107,11 +107,16 @@ HTTP code pho bien: 200, 201, 400, 401, 403, 404, 409, 500.
 | GET | /v1/api/product/ | Khong | Danh sach san pham |
 | GET | /v1/api/product/:productId | Khong | Chi tiet san pham |
 
-### 7.2 Protected (Shop only - requires shopAuthenticationV2)
+### 7.2 Protected (authenticationV2 / shopAuthenticationV2)
 
 | Method | Endpoint | Auth | Mo ta |
 |---|---|---|---|
 | POST | /v1/api/product/:productId/reviews | User token | Them danh gia |
+
+### 7.3 Shop only - requires shopAuthenticationV2
+
+| Method | Endpoint | Auth | Mo ta |
+|---|---|---|---|
 | POST | /v1/api/product/ | Shop token | Tao san pham |
 | PATCH | /v1/api/product/:productId | Shop token | Sua san pham |
 | DELETE | /v1/api/product/:productId | Shop token | Xoa cung san pham |
@@ -120,7 +125,7 @@ HTTP code pho bien: 200, 201, 400, 401, 403, 404, 409, 500.
 | PATCH | /v1/api/product/:productId/publish | Shop token | Publish san pham |
 | PATCH | /v1/api/product/:productId/unpublish | Shop token | Unpublish san pham |
 
-### 7.3 Shop soft delete APIs
+### 7.4 Shop soft delete APIs
 
 | Method | Endpoint | Auth | Mo ta |
 |---|---|---|---|
@@ -312,6 +317,7 @@ HTTP code pho bien: 200, 201, 400, 401, 403, 404, 409, 500.
   - /v1/api/shop/* (router shop)
   - /v1/api/shop/* (router access)
   Cung path, cung chuc nang, can thong nhat de de bao tri.
+- Trong `src/routes/product/index.js`, các route `GET /v1/api/product/shop/drafts`, `GET /v1/api/product/shop/published`, `GET /v1/api/product/shop/deleted` đang được khai báo sau `GET /v1/api/product/:productId`. Khi test thực tế, cần chú ý thứ tự route của Express vì path tham số có thể bắt trước các path `shop/*`.
 - Notification dang co 2 mount path (/v1/api/users va /api/users). Neu khong can backward compatibility, nen bo 1 path.
 
 ---
@@ -599,7 +605,7 @@ Quy uoc Header:
 - Body: none
 
 6) POST /v1/api/product/:productId/reviews
-- Headers bat buoc: x-client-id, authorization
+- Headers bat buoc: x-client-id, authorization (auth middleware: authenticationV2)
 - Params: productId
 - Body bat buoc: { content, rating }
 - rating hop le: 0..5

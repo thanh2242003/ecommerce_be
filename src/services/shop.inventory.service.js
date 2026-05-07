@@ -44,7 +44,12 @@ const createOrUpdateInventory = async (shopId, data) => {
         inventory.reserved = data.reserved !== undefined ? data.reserved : inventory.reserved;
         
         if (data.variants) {
-            inventory.variants = data.variants;
+            inventory.variants = data.variants.map((variant) => ({
+                variantId: variant.variantId,
+                color: variant.color,
+                size: variant.size,
+                stock: variant.stock ?? variant.quantity ?? 0
+            }));
         }
 
         await inventory.save();
@@ -57,7 +62,12 @@ const createOrUpdateInventory = async (shopId, data) => {
             totalQuantity: data.totalQuantity || 0,
             location: data.location || 'Main Warehouse',
             reserved: data.reserved || 0,
-            variants: data.variants || []
+            variants: (data.variants || []).map((variant) => ({
+                variantId: variant.variantId,
+                color: variant.color,
+                size: variant.size,
+                stock: variant.stock ?? variant.quantity ?? 0
+            }))
         });
 
         await inventory.save();

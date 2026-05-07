@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 const Order = require('../models/order.model');
 const Product = require('../models/product.model');
+const Inventory = require('../models/inventory.model');
 const { cart: Cart } = require('../models/cart.model');
 const Address = require('../models/address.model');
 const NotificationService = require('./notification.service');
@@ -100,11 +101,18 @@ class OrderService {
                         size: variant.size || null   // ✅ From variant
                     });
 
-                    // ✅ Deduct stock at variant level
+                    // ✅ Deduct stock at variant level (Product)
                     await Product.findOneAndUpdate(
                         { _id: product._id, 'variants._id': item.variantId },
                         { $inc: { 'variants.$.stock': -item.quantity, salesNumber: item.quantity } },
                         { session }
+                    );
+
+                    // ✅ Deduct inventory (Inventory model)
+                    await Inventory.findOneAndUpdate(
+                        { productId: product._id, shopId },
+                        { $inc: { totalQuantity: -item.quantity } },
+                        { session, new: true }
                     );
                 }
 
@@ -161,11 +169,18 @@ class OrderService {
                     size: variant.size || null  // ✅ From variant
                 });
 
-                // ✅ Deduct stock at variant level
+                // ✅ Deduct stock at variant level (Product)
                 await Product.findOneAndUpdate(
                     { _id: product._id, 'variants._id': variantId },
                     { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
                     { session }
+                );
+
+                // ✅ Deduct inventory (Inventory model)
+                await Inventory.findOneAndUpdate(
+                    { productId: product._id, shopId },
+                    { $inc: { totalQuantity: -quantity } },
+                    { session, new: true }
                 );
 
             } else {

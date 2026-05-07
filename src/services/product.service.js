@@ -3,6 +3,7 @@
 const { Types } = require('mongoose');
 const { BadRequestError } = require('../core/error.response');
 const Product = require('../models/product.model');
+const Inventory = require('../models/inventory.model');
 const SearchHistory = require('../models/search_history.model');
 
 function formatProductResponse(doc) {
@@ -152,6 +153,25 @@ class ProductService {
             salesNumber: 0,
             reviews: []
         })
+
+        // ✅ TỰ ĐỘNG TẠO INVENTORY RECORD
+        const totalQuantity = this.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0;
+        
+        await Inventory.create({
+            productId: newProduct._id,
+            shopId: this.product_shop,
+            totalQuantity: totalQuantity,
+            location: 'Main Warehouse',
+            variants: newProduct.variants.map(v => ({
+                variantId: v._id,
+                size: v.size,
+                color: v.color,
+                stock: v.stock || 0
+            }))
+        }).catch((err) => {
+            // Log error but don't fail product creation
+            console.error('[ProductService] Failed to create inventory:', err.message);
+        });
 
         return formatProductResponse(newProduct)
     }

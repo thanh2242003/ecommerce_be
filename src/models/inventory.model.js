@@ -5,11 +5,12 @@ const { model, Schema, Types } = require('mongoose');
 const DOCUMENT_NAME = 'Inventory';
 const COLLECTION_NAME = 'Inventories';
 
-// Variant-specific inventory (size, color)
+// Variant-specific inventory mapped 1-1 with Product.variants
 const variantInventorySchema = new Schema({
-    size: { type: String, required: true },
+    variantId: { type: Schema.Types.ObjectId, required: true },
     color: { type: String, required: true },
-    quantity: { type: Number, required: true, min: 0, default: 0 }
+    size: { type: String, required: true },
+    stock: { type: Number, required: true, min: 0, default: 0 }
 }, { _id: false });
 
 // Main inventory schema
@@ -23,7 +24,7 @@ const inventorySchema = new Schema({
     // Location/warehouse information
     location: { type: String, default: 'Main Warehouse' },
     
-    // Variant-specific inventory (optional - for products with size/color options)
+    // Variant-specific inventory (optional - mirrors Product.variants)
     variants: { type: [variantInventorySchema], default: [] },
     
     // Reserved quantity (in pending/processing orders)
