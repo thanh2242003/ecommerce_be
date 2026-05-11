@@ -8,6 +8,7 @@ const ShopProductController = require('../../controllers/shop.product.controller
 const { asyncHandler } = require('../../auth/checkAuth');
 const { authenticationV2, optionalAuth } = require('../../auth/authUtils');
 const { shopAuthenticationV2 } = require('../../auth/shopAuth');
+const upload = require('../../configs/multer.config');
 
 /*
 ========================
@@ -47,11 +48,11 @@ router.post('/:productId/reviews', asyncHandler(ProductController.addReview));
 ========================
 */
 
-// CREATE
-router.post('/', shopAuthenticationV2, asyncHandler(ProductController.createProduct));
+// CREATE (validate body first, then upload images to Cloudinary)
+router.post('/', shopAuthenticationV2, upload.array('images', 5), asyncHandler(ProductController.createProduct));
 
-// UPDATE
-router.patch('/:productId', shopAuthenticationV2, asyncHandler(ProductController.updateProduct));
+// UPDATE (validate body first, then upload images to Cloudinary if present)
+router.patch('/:productId', shopAuthenticationV2, upload.array('images', 5), asyncHandler(ProductController.updateProduct));
 
 // DELETE (hard delete)
 router.delete('/:productId', shopAuthenticationV2, asyncHandler(ProductController.deleteProduct));

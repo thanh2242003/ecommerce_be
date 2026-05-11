@@ -1,45 +1,147 @@
 'use strict';
 
 const userModel = require('../models/user.model');
-const { SuccessResponse } = require("../core/success.response");
-const { ProductFactory, ProductService } = require("../services/product.service");
+const { SuccessResponse } = require('../core/success.response');
+const { BadRequestError } = require('../core/error.response');
+const { ProductFactory, ProductService } = require('../services/product.service');
+const { uploadFilesToCloudinary } = require('../helpers/cloudinary.helper');
+
+function parseMultipartField(value, fallback = undefined) {
+    if (value === undefined || value === null || value === '') {
+        return fallback;
+    }
+
+    if (Array.isArray(value)) {
+        return value;
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (!trimmed) {
+            return fallback;
+        }
+
+        try {
+            return JSON.parse(trimmed);
+        } catch (error) {
+            return value;
+        }
+    }
+
+    return value;
+}
+
+function parseNumberField(value, fieldName) {
+    if (value === undefined || value === null || value === '') {
+        return undefined;
+    }
+
+    const parsed = Number(value);
+    if (Number.isNaN(parsed)) {
+        throw new BadRequestError(`${fieldName} must be a number`);
+    }
+
+    return parsed;
+}
+
+function validateCreateProductBody(payload) {
+    if (!payload.title) {
+        throw new BadRequestError('title is required');
+    }
+
+    if (payload.price === undefined || payload.price === null || payload.price === '') {
+        throw new BadRequestError('price is required');
+    }
+
+    if (!payload.categoryId) {
+        throw new BadRequestError('categoryId is required');
+    }
+
+    if (!Array.isArray(payload.sizes) || payload.sizes.length === 0) {
+        throw new BadRequestError('sizes is required');
+    }
+
+    if (!Array.isArray(payload.colors) || payload.colors.length === 0) {
+        throw new BadRequestError('colors is required');
+    }
+
+    if (!Array.isArray(payload.variants) || payload.variants.length === 0) {
+        throw new BadRequestError('variants is required');
+    }
+}
 
 class ProductController {
-
     createProduct = async (req, res, next) => {
         const payload = {
             productId: req.body.productId,
             title: req.body.title || req.body.product_name,
             description: req.body.description || req.body.product_description,
-            price: req.body.price || req.body.product_price,
-            discountedPrice: req.body.discountedPrice || req.body.product_discountedPrice || 0,
+            price: parseNumberField(req.body.price ?? req.body.product_price, 'price'),
+            discountedPrice: parseNumberField(
+                req.body.discountedPrice ?? req.body.product_discountedPrice ?? 0,
+                'discountedPrice'
+            ) ?? 0,
             categoryId: req.body.categoryId || req.body.product_categoryId,
-            gender: req.body.gender !== undefined ? req.body.gender : req.body.product_gender || 2,
-            images: req.body.images || (req.body.product_thumb ? [req.body.product_thumb] : []),
-            sizes: req.body.sizes || req.body.product_sizes || [],
-            //product_attributes: req.body.product_attributes || {},
-            colors: req.body.colors || [],
-            variants: req.body.variants || [],
+            gender: parseNumberField(
+                req.body.gender !== undefined ? req.body.gender : (req.body.product_gender ?? 2),
+                'gender'
+            ) ?? 2,
+            sizes: parseMultipartField(req.body.sizes ?? req.body.product_sizes, []),
+            colors: parseMultipartField(req.body.colors, []),
+            variants: parseMultipartField(req.body.variants, []),
             product_shop: req.shopId
-        }
+        };
+
+        validateCreateProductBody(payload);
+
+        payload.images = await uploadFilesToCloudinary(req.files || []);
 
         new SuccessResponse({
             message: 'Create new Product successfully!',
-            metadata: await ProductFactory.createProduct(
-                payload
-            )
+            metadata: await ProductFactory.createProduct(payload)
         }).send(res);
     }
 
     updateProduct = async (req, res, next) => {
+        const updateData = {
+            ...req.body,
+            product_shop: req.shopId
+        };
+
+        if (req.body.price !== undefined) {
+            updateData.price = parseNumberField(req.body.price, 'price');
+        }
+
+        if (req.body.discountedPrice !== undefined) {
+            updateData.discountedPrice = parseNumberField(req.body.discountedPrice, 'discountedPrice');
+        }
+
+        if (req.body.gender !== undefined) {
+            updateData.gender = parseNumberField(req.body.gender, 'gender');
+        }
+
+        if (req.body.sizes !== undefined) {
+            updateData.sizes = parseMultipartField(req.body.sizes, []);
+        }
+
+        if (req.body.colors !== undefined) {
+            updateData.colors = parseMultipartField(req.body.colors, []);
+        }
+
+        if (req.body.variants !== undefined) {
+            updateData.variants = parseMultipartField(req.body.variants, []);
+        }
+
+        if (req.files && req.files.length > 0) {
+            updateData.images = await uploadFilesToCloudinary(req.files);
+        }
+
         new SuccessResponse({
             message: 'Update product successfully!',
             metadata: await ProductService.updateProduct(
                 req.params.productId,
-                {
-                    ...req.body,
-                    product_shop: req.shopId
-                },
+                updateData,
                 req.shopId
             )
         }).send(res);
@@ -80,7 +182,7 @@ class ProductController {
             metadata: await ProductService.searchProducts({
                 keyword: req.query.q,
                 categoryId: req.query.categoryId,
-                userId: req.user?.userId ?? null   // set by optionalAuth; null for guests
+                userId: req.user?.userId ?? null
             })
         }).send(res);
     }
@@ -114,8 +216,6 @@ class ProductController {
             })
         }).send(res);
     }
-
-    // SHOP
 
     getAllDraftForShop = async (req, res, next) => {
         new SuccessResponse({
