@@ -5,6 +5,7 @@ const { BadRequestError } = require('../core/error.response');
 const Product = require('../models/product.model');
 const Inventory = require('../models/inventory.model');
 const SearchHistory = require('../models/search_history.model');
+const Order = require('../models/order.model');
 
 function formatProductResponse(doc) {
     if (!doc) return doc;
@@ -322,7 +323,7 @@ class ProductService {
         return formatProductResponse(deleted)
     }
 
-    static async addReview(productId, { userId, userName, content, rating }) {
+    static async addReview(productId, { userId, userName, content, rating, orderId }) {
         if (!Types.ObjectId.isValid(productId)) {
             throw new BadRequestError('Invalid product ID format')
         }
@@ -334,6 +335,26 @@ class ProductService {
             throw new BadRequestError('rating must be a number between 0 and 5')
         }
 
+        // Order-based validation: require orderId that belongs to user, contains product, and is delivered
+        if (!orderId || !Types.ObjectId.isValid(orderId)) {
+            throw new BadRequestError('orderId is required and must be a valid id')
+        }
+
+        const order = await Order.findById(orderId).lean();
+        if (!order) throw new BadRequestError('Order not found')
+        if (String(order.userId) !== String(userId)) throw new BadRequestError('Order does not belong to user')
+        if (order.status !== 'delivered') throw new BadRequestError('Order must be delivered to be reviewed')
+
+        const itemMatch = Array.isArray(order.items) && order.items.some(it => String(it.productId) === String(productId));
+        if (!itemMatch) throw new BadRequestError('Order does not contain this product')
+
+        // Ensure this order hasn't been reviewed already for this product
+        const productDoc = await Product.findById(productId).select('reviews product_shop');
+        if (!productDoc) throw new BadRequestError('Product not found');
+
+        const existing = (productDoc.reviews || []).some(r => r.orderId && String(r.orderId) === String(orderId));
+        if (existing) throw new BadRequestError('This order has already been reviewed')
+
         const updated = await Product.findByIdAndUpdate(
             productId,
             {
@@ -342,14 +363,173 @@ class ProductService {
                         userId: new Types.ObjectId(userId),
                         userName: String(userName).trim(),
                         content: String(content).trim(),
-                        rating: r
+                        rating: r,
+                        orderId: new Types.ObjectId(orderId)
                     }
                 }
             },
             { new: true }
         );
 
-        if (!updated) throw new BadRequestError('Product not found');
+        if (!updated) throw new BadRequestError('Failed to add review');
+
+        return formatProductResponse(updated);
+    }
+
+    static async getReviews(productId, { page = 1, limit = 10 } = {}) {
+        if (!Types.ObjectId.isValid(productId)) {
+            throw new BadRequestError('Invalid product ID format')
+        }
+
+        const product = await Product.findById(productId).select('reviews')
+        if (!product) throw new BadRequestError('Product not found')
+
+        const rawReviews = Array.isArray(product.reviews) ? product.reviews : [];
+        const total = rawReviews.length;
+        const start = (page - 1) * limit;
+        const paged = rawReviews.slice(start, start + limit).map((r) => ({
+            _id: r._id ? String(r._id) : undefined,
+            userId: r.userId != null ? String(r.userId) : '',
+            userName: r.userName != null ? String(r.userName) : '',
+            content: r.content != null ? String(r.content) : '',
+            rating: typeof r.rating === 'number' ? r.rating : Number(r.rating) || 0,
+            createdAt: r.createdAt || null,
+            updatedAt: r.updatedAt || null
+        }));
+
+        const sum = rawReviews.reduce((s, r) => s + (Number(r.rating) || 0), 0);
+        const ratings = rawReviews.length ? Math.round((sum / rawReviews.length) * 10) / 10 : 0;
+
+        return {
+            reviews: paged,
+            total,
+            page,
+            limit,
+            ratings
+        };
+    }
+
+    static async getReviewsByUser(userId, { page = 1, limit = 10 } = {}) {
+        if (!Types.ObjectId.isValid(userId)) {
+            throw new BadRequestError('Invalid user ID format')
+        }
+
+        // Aggregate reviews across products
+        const skip = (page - 1) * limit;
+
+        const pipeline = [
+            { $unwind: '$reviews' },
+            { $match: { 'reviews.userId': new Types.ObjectId(userId) } },
+            { $project: {
+                productId: '$_id',
+                productTitle: '$title',
+                productImage: { $arrayElemAt: ['$images', 0] },
+                'review._id': '$reviews._id',
+                'review.content': '$reviews.content',
+                'review.rating': '$reviews.rating',
+                'review.orderId': '$reviews.orderId',
+                'review.createdAt': '$reviews.createdAt',
+                'review.updatedAt': '$reviews.updatedAt'
+            }},
+            { $sort: { 'review.createdAt': -1 } },
+            { $skip: skip },
+            { $limit: limit }
+        ];
+
+        const results = await Product.aggregate(pipeline);
+
+        // Count total
+        const countPipeline = [
+            { $unwind: '$reviews' },
+            { $match: { 'reviews.userId': new Types.ObjectId(userId) } },
+            { $count: 'total' }
+        ];
+        const countRes = await Product.aggregate(countPipeline);
+        const total = countRes[0] ? countRes[0].total : 0;
+
+        return {
+            reviews: results.map(r => ({
+                productId: r.productId ? String(r.productId) : undefined,
+                title: r.productTitle,
+                image: r.productImage,
+                review: r.review
+            })),
+            total,
+            page,
+            limit
+        };
+    }
+
+    static async updateReview(productId, reviewId, userId, { content, rating }) {
+        if (!Types.ObjectId.isValid(productId) || !Types.ObjectId.isValid(reviewId)) {
+            throw new BadRequestError('Invalid id format')
+        }
+
+        if ((content == null || String(content).trim() === '') && rating == null) {
+            throw new BadRequestError('No update fields provided')
+        }
+
+        const updateFields = {};
+        if (content != null) updateFields['reviews.$.content'] = String(content).trim();
+        if (rating != null) {
+            const r = Number(rating);
+            if (Number.isNaN(r) || r < 0 || r > 5) throw new BadRequestError('rating must be a number between 0 and 5')
+            updateFields['reviews.$.rating'] = r;
+        }
+
+        const query = {
+            _id: productId,
+            'reviews._id': reviewId,
+            'reviews.userId': new Types.ObjectId(userId)
+        };
+
+        const updated = await Product.findOneAndUpdate(
+            query,
+            { $set: updateFields },
+            { new: true }
+        );
+
+        if (!updated) throw new BadRequestError('Review not found or permission denied')
+
+        return formatProductResponse(updated);
+    }
+
+    static async deleteReview(productId, reviewId, userId) {
+        if (!Types.ObjectId.isValid(productId) || !Types.ObjectId.isValid(reviewId)) {
+            throw new BadRequestError('Invalid id format')
+        }
+
+        const updated = await Product.findOneAndUpdate(
+            { _id: productId },
+            { $pull: { reviews: { _id: reviewId, userId: new Types.ObjectId(userId) } } },
+            { new: true }
+        );
+
+        if (!updated) throw new BadRequestError('Review not found or permission denied')
+
+        return formatProductResponse(updated);
+    }
+
+    static async replyToReview(productId, reviewId, shopId, { content }) {
+        if (!Types.ObjectId.isValid(productId) || !Types.ObjectId.isValid(reviewId)) {
+            throw new BadRequestError('Invalid id format')
+        }
+
+        if (content == null || String(content).trim() === '') {
+            throw new BadRequestError('content is required')
+        }
+
+        const product = await Product.findById(productId).select('product_shop');
+        if (!product) throw new BadRequestError('Product not found')
+        if (String(product.product_shop) !== String(shopId)) throw new BadRequestError('Permission denied')
+
+        const updated = await Product.findOneAndUpdate(
+            { _id: productId, 'reviews._id': reviewId },
+            { $set: { 'reviews.$.shopResponse': { shopId: new Types.ObjectId(shopId), content: String(content).trim(), respondedAt: new Date() } } },
+            { new: true }
+        );
+
+        if (!updated) throw new BadRequestError('Review not found')
 
         return formatProductResponse(updated);
     }

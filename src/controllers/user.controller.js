@@ -52,6 +52,16 @@ class UserController {
       metadata: await UserService.removeFcmToken(req.user.userId, fcmToken)
     }).send(res);
   };
+
+  getMyReviews = async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    new SuccessResponse({
+      message: 'Get my reviews successfully!',
+      metadata: await require('../services/product.service').ProductService.getReviewsByUser(req.user.userId, { page, limit })
+    }).send(res);
+  };
 }
 
 module.exports = new UserController();

@@ -11,8 +11,14 @@ const reviewSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User' },
   userName: { type: String, required: true, trim: true },
   content: { type: String, required: true, trim: true },
-  rating: { type: Number, required: true, min: 0, max: 5 }
-}, { _id: false, timestamps: false });
+  rating: { type: Number, required: true, min: 0, max: 5 },
+  orderId: { type: Schema.Types.ObjectId, ref: 'Order' },
+  shopResponse: {
+    shopId: { type: Schema.Types.ObjectId, ref: 'Shop' },
+    content: { type: String, trim: true },
+    respondedAt: { type: Date }
+  }
+}, { timestamps: true });
 
 // Variant schema — represents a unique (color, size) combination with its own stock
 const variantSchema = new Schema({

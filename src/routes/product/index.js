@@ -29,6 +29,10 @@ router.get('/suggested/:userId', asyncHandler(ProductController.getSuggestedProd
 router.get('/', asyncHandler(ProductController.getAllProducts));
 
 // GET DETAIL
+// GET REVIEWS (public)
+router.get('/:productId/reviews', asyncHandler(ProductController.getReviews));
+
+// GET DETAIL
 router.get('/:productId', asyncHandler(ProductController.getProductById));
 
 
@@ -41,6 +45,15 @@ router.use(authenticationV2);
 
 // ADD REVIEW (requires auth)
 router.post('/:productId/reviews', asyncHandler(ProductController.addReview));
+
+// UPDATE REVIEW (requires auth, owner)
+router.patch('/:productId/reviews/:reviewId', asyncHandler(ProductController.updateReview));
+
+// DELETE REVIEW (requires auth, owner)
+router.delete('/:productId/reviews/:reviewId', asyncHandler(ProductController.deleteReview));
+
+// SHOP reply to review (shopAuthenticationV2)
+router.post('/:productId/reviews/:reviewId/reply', shopAuthenticationV2, asyncHandler(ProductController.shopReplyReview));
 
 /*
 ========================

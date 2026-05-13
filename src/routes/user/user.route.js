@@ -13,6 +13,9 @@ router.use(authenticationV2);
 // GET /v1/api/user/profile
 router.get('/profile', asyncHandler(UserController.getProfile));
 
+// GET /v1/api/user/reviews
+router.get('/reviews', asyncHandler(UserController.getMyReviews));
+
 // PATCH /v1/api/user/profile
 router.patch('/profile', asyncHandler(UserController.updateProfile));
 

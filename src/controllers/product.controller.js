@@ -176,6 +176,16 @@ class ProductController {
         }).send(res);
     }
 
+    getReviews = async (req, res, next) => {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        new SuccessResponse({
+            message: 'Get reviews successfully!',
+            metadata: await ProductService.getReviews(req.params.productId, { page, limit })
+        }).send(res);
+    }
+
     searchProducts = async (req, res, next) => {
         new SuccessResponse({
             message: 'Search products successfully!',
@@ -212,8 +222,50 @@ class ProductController {
                 userId,
                 userName,
                 content: req.body.content,
-                rating: req.body.rating
+                rating: req.body.rating,
+                orderId: req.body.orderId
             })
+        }).send(res);
+    }
+
+    updateReview = async (req, res, next) => {
+        const userId = req.user.userId;
+
+        new SuccessResponse({
+            message: 'Review updated successfully!',
+            metadata: await ProductService.updateReview(
+                req.params.productId,
+                req.params.reviewId,
+                userId,
+                { content: req.body.content, rating: req.body.rating }
+            )
+        }).send(res);
+    }
+
+    deleteReview = async (req, res, next) => {
+        const userId = req.user.userId;
+
+        new SuccessResponse({
+            message: 'Review deleted successfully!',
+            metadata: await ProductService.deleteReview(
+                req.params.productId,
+                req.params.reviewId,
+                userId
+            )
+        }).send(res);
+    }
+
+    shopReplyReview = async (req, res, next) => {
+        const shopId = req.shopId;
+
+        new SuccessResponse({
+            message: 'Reply added successfully!',
+            metadata: await ProductService.replyToReview(
+                req.params.productId,
+                req.params.reviewId,
+                shopId,
+                { content: req.body.content }
+            )
         }).send(res);
     }
 
