@@ -18,4 +18,7 @@ router.get('/orders', asyncHandler(OrderController.getOrders));
 // GET /v1/api/order/orders/:id — lấy chi tiết 1 đơn hàng
 router.get('/orders/:id', asyncHandler(OrderController.getOrderById));
 
+// PATCH /v1/api/order/orders/:id/cancel — hủy đơn bởi user
+router.patch('/orders/:id/cancel', asyncHandler(OrderController.cancelOrder));
+
 module.exports = router;

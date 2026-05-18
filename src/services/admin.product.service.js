@@ -2,6 +2,7 @@
 
 const { Types } = require('mongoose');
 const Product = require('../models/product.model');
+const Inventory = require('../models/inventory.model');
 const { BadRequestError, NotFoundError } = require('../core/error.response');
 const { parsePagination, getPaginationMetadata } = require('../utils/pagination');
 const { normalizeProductStatus } = require('../utils/admin.validation');
@@ -11,9 +12,22 @@ const formatProduct = (product) => {
         return product;
     }
 
+    const inv = product.inventory || null;
+
     return {
         ...product,
         status: product.status || 'pending',
+        inventory: inv
+            ? {
+                  totalQuantity: inv.totalQuantity ?? 0,
+                  reserved: inv.reserved ?? 0,
+                  status: inv.status || 'out_of_stock'
+              }
+            : {
+                  totalQuantity: 0,
+                  reserved: 0,
+                  status: 'out_of_stock'
+              }
     };
 };
 
@@ -45,8 +59,21 @@ class AdminProductService {
                 .lean(),
         ]);
 
+        // Attach inventory documents to products so frontend can display stock
+        const productIds = products.map((p) => p._id);
+        const inventories = await Inventory.find({ productId: { $in: productIds } }).lean();
+        const inventoryMap = {};
+        inventories.forEach((inv) => {
+            if (inv && inv.productId) inventoryMap[inv.productId.toString()] = inv;
+        });
+
+        const productsWithInventory = products.map((p) => ({
+            ...p,
+            inventory: inventoryMap[p._id.toString()] || null
+        }));
+
         return {
-            products: products.map(formatProduct),
+            products: productsWithInventory.map(formatProduct),
             pagination: getPaginationMetadata(total, page, limit),
         };
     }

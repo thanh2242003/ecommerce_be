@@ -6,6 +6,7 @@ const router = express.Router();
 const CategoryController = require('../../controllers/category.controller');
 const { asyncHandler } = require('../../auth/checkAuth');
 const { verifyAdmin } = require('../../auth/adminAuth');
+const upload = require('../../configs/multer.config');
 
 /*
 ========================
@@ -29,10 +30,10 @@ router.get('/:categoryId', asyncHandler(CategoryController.getCategoryById));
 */
 
 // CREATE CATEGORY (Admin only)
-router.post('/', verifyAdmin, asyncHandler(CategoryController.createCategory));
+router.post('/', verifyAdmin, upload.single('image'), asyncHandler(CategoryController.createCategory));
 
 // UPDATE CATEGORY (Admin only)
-router.patch('/:categoryId', verifyAdmin, asyncHandler(CategoryController.updateCategory));
+router.patch('/:categoryId', verifyAdmin, upload.single('image'), asyncHandler(CategoryController.updateCategory));
 
 // DELETE CATEGORY (Admin only)
 router.delete('/:categoryId', verifyAdmin, asyncHandler(CategoryController.deleteCategory));

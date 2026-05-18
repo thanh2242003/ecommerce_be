@@ -36,7 +36,8 @@ class CategoryController {
       metadata: await CategoryService.createCategory({
         name: req.body.name,
         description: req.body.description,
-        adminId: req.adminId  // Admin ID from x-client-id header
+        adminId: req.adminId, // Admin ID from x-client-id header
+        imageFile: req.file
       })
     }).send(res);
   }
@@ -50,7 +51,8 @@ class CategoryController {
         {
           name: req.body.name,
           description: req.body.description,
-          isActive: req.body.isActive
+          isActive: req.body.isActive,
+          imageFile: req.file
         }
       )
     }).send(res);

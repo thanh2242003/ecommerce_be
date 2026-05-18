@@ -46,6 +46,18 @@ class OrderController {
             })
         }).send(res);
     }
+
+    // PATCH /orders/:id/cancel — user cancels their own order
+    cancelOrder = async (req, res, next) => {
+        const userId = req.user.userId;
+        const orderId = req.params.id;
+        const { cancelReason } = req.body;
+
+        new SuccessResponse({
+            message: 'Order cancelled successfully',
+            metadata: await OrderService.cancelOrder({ userId, orderId, cancelReason })
+        }).send(res);
+    }
 }
 
 module.exports = new OrderController;

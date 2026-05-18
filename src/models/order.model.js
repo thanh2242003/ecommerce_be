@@ -37,6 +37,10 @@ const orderSchema = new Schema({
         default: 'pending',
         index: true
     },
+    // Cancellation information — populated when an order is cancelled
+    cancelReason: { type: String, default: null },
+    cancelledAt: { type: Date, default: null },
+    cancelledBy: { type: String, enum: ['user', 'shop', 'admin'], default: null },
     
     paymentMethod: {
         type: String,

@@ -25,6 +25,10 @@ const categorySchema = new Schema({
     default: '',
     trim: true
   },
+  image: {
+    type: String,
+    default: ''
+  },
   adminId: {
     type: Schema.Types.ObjectId,
     ref: 'User',

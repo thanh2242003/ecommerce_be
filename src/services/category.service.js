@@ -2,6 +2,7 @@
 
 const { BadRequestError, NotFoundError } = require('../core/error.response');
 const Category = require('../models/category.model');
+const { uploadFilesToCloudinary } = require('../helpers/cloudinary.helper');
 
 class CategoryService {
   
@@ -44,7 +45,7 @@ class CategoryService {
   }
 
   // ================= CREATE CATEGORY (Admin only) =================
-  static async createCategory({ name, description = '', adminId }) {
+  static async createCategory({ name, description = '', adminId, imageFile = null }) {
     try {
       if (!name || name.trim() === '') {
         throw new BadRequestError('Category name is required');
@@ -63,11 +64,18 @@ class CategoryService {
         throw new BadRequestError('Category name already exists');
       }
 
-      const newCategory = await Category.create({
+      const categoryData = {
         name: name.trim(),
         description: description.trim(),
         adminId
-      });
+      };
+
+      if (imageFile) {
+        const urls = await uploadFilesToCloudinary([imageFile], 'learning-ecommerce/categories');
+        if (urls && urls.length > 0) categoryData.image = urls[0];
+      }
+
+      const newCategory = await Category.create(categoryData);
 
       return newCategory.toJSON();
     } catch (error) {
@@ -103,6 +111,14 @@ class CategoryService {
         category.isActive = isActive;
       }
 
+      // If imageFile provided in update payload, upload and replace
+      if (arguments[1] && arguments[1].imageFile) {
+        const imgFile = arguments[1].imageFile;
+        if (imgFile) {
+          const urls = await uploadFilesToCloudinary([imgFile], 'learning-ecommerce/categories');
+          if (urls && urls.length > 0) category.image = urls[0];
+        }
+      }
       await category.save();
       return category.toJSON();
     } catch (error) {

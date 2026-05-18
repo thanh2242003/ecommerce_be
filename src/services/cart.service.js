@@ -62,6 +62,11 @@ class CartService {
             throw new NotFoundError('Product not found');
         }
 
+        // Ensure the product is available to customers (approved and published)
+        if (!foundProduct.isPublished || String(foundProduct.status).toLowerCase() !== 'approved') {
+            throw new BadRequestError('Product is not available');
+        }
+
         // Get variant to verify it exists
         const variant = foundProduct.getVariant(variantId);
         if (!variant) {

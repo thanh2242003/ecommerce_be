@@ -126,9 +126,15 @@ const getProductById = async (productId) => {
     return await Product.findById(productId);
 }
 
+const getPublicProductById = async (productId) => {
+    if (!Types.ObjectId.isValid(productId)) return null;
+    return await Product.findOne({ _id: productId, isPublished: true, status: 'approved' });
+}
+
 const checkProductByServer = async (products) => {
     return await Promise.all(products.map(async product => {
-        const foundProduct = await getProductById(product.productId);
+        // Only consider products that are published and approved
+        const foundProduct = await getPublicProductById(product.productId);
         if (foundProduct) {
             return {
                 price: foundProduct.price || foundProduct.product_price,
@@ -136,6 +142,8 @@ const checkProductByServer = async (products) => {
                 productId: product.productId,
             }
         }
+        // If not found (not published/approved) return null to indicate problem
+        return null;
     }))
 }
 
@@ -149,5 +157,6 @@ module.exports = {
     findProduct,
     updateProductById,
     getProductById,
+    getPublicProductById,
     checkProductByServer
 };

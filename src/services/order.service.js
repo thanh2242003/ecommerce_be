@@ -255,6 +255,55 @@ class OrderService {
 
         return order;
     }
+
+    // Cancel an order (initiated by the order owner)
+    static async cancelOrder({ userId, orderId, cancelReason = null }) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            // Verify ownership and current status
+            const order = await Order.findOne({ _id: orderId, userId }).session(session);
+            if (!order) throw new NotFoundError('Order not found or does not belong to the user');
+
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                throw new BadRequestError(`Cannot cancel order with status "${order.status}"`);
+            }
+
+            // Update order cancellation fields
+            order.status = 'cancelled';
+            order.cancelReason = cancelReason || null;
+            order.cancelledAt = new Date();
+            order.cancelledBy = 'user';
+            await order.save({ session });
+
+            // Restore stock and inventory for each item
+            for (const item of order.items) {
+                // Restore product variant stock and decrement salesNumber
+                await Product.findOneAndUpdate(
+                    { _id: item.productId, 'variants._id': item.variantId },
+                    { $inc: { 'variants.$.stock': item.quantity, salesNumber: -item.quantity } },
+                    { session }
+                );
+
+                // Restore inventory totalQuantity
+                await Inventory.findOneAndUpdate(
+                    { productId: item.productId, shopId: order.shopId },
+                    { $inc: { totalQuantity: item.quantity } },
+                    { session }
+                );
+            }
+
+            await session.commitTransaction();
+
+            return order.toObject();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
+    }
 }
 
 module.exports = OrderService;

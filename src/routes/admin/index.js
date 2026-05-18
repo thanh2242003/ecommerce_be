@@ -19,6 +19,7 @@ const AdminProductController = require('../../controllers/admin.product.controll
 const AdminOrderController = require('../../controllers/admin.order.controller');
 const AdminAnalyticsController = require('../../controllers/admin.analytics.controller');
 const AdminNotificationController = require('../../controllers/admin.notification.controller');
+const AdminDiscountController = require('../../controllers/admin.discount.controller');
 
 router.post('/auth/login', asyncHandler(AdminAuthController.login));
 router.get('/profile', verifyAdmin, asyncHandler(AdminAuthController.profile));
@@ -44,5 +45,9 @@ router.patch('/orders/:id/status', asyncHandler(AdminOrderController.updateOrder
 
 router.get('/analytics/overview', asyncHandler(AdminAnalyticsController.getOverview));
 router.post('/notifications/send-bulk', asyncHandler(AdminNotificationController.sendBulkNotifications));
+// Admin: create / update / delete platform-wide discounts
+router.post('/discounts', asyncHandler(AdminDiscountController.createPlatformDiscount));
+router.patch('/discounts/:id', asyncHandler(AdminDiscountController.updatePlatformDiscount));
+router.delete('/discounts/:id', asyncHandler(AdminDiscountController.deletePlatformDiscount));
 
 module.exports = router;

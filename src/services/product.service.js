@@ -181,7 +181,8 @@ class ProductService {
     static async getAllProducts({ page = 1, limit = 10 }) {
         const skip = (page - 1) * limit
 
-        const list = await Product.find()
+        // Public listing: only return published & approved products
+        const list = await Product.find({ isPublished: true, status: 'approved' })
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -198,6 +199,11 @@ class ProductService {
 
         if (!found) throw new BadRequestError('Product not found')
 
+        // Only expose product to users if it is published and approved
+        if (!found.isPublished || String(found.status).toLowerCase() !== 'approved') {
+            throw new BadRequestError('Product not available')
+        }
+
         return formatProductResponse(found)
     }
 
@@ -212,7 +218,7 @@ class ProductService {
             });
         }
 
-        const query = {};
+        const query = { isPublished: true, status: 'approved' };
         
         if (keyword) {
             query.title = { $regex: keyword, $options: 'i' };
@@ -248,6 +254,13 @@ class ProductService {
         if (isDraft !== undefined) query.isDraft = isDraft
         if (isPublished !== undefined) query.isPublished = isPublished
 
+        // If caller did not explicitly request drafts/published and it's not a shop-scoped query,
+        // only return published & approved products for public users.
+        if (isPublished === undefined && !product_shop) {
+            query.isPublished = true;
+            query.status = 'approved';
+        }
+
         if (minPrice || maxPrice) {
             query.price = {}
             if (minPrice) query.price.$gte = minPrice
@@ -266,7 +279,8 @@ class ProductService {
 
     // ================= TOP SELLING =================
     static async getTopSelling(limit = 10) {
-        const list = await Product.find({ isDeleted: false })
+        // Only top selling among published & approved products
+        const list = await Product.find({ isDeleted: false, isPublished: true, status: 'approved' })
             .sort({ salesNumber: -1 })
             .limit(limit)
 

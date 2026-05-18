@@ -30,7 +30,14 @@ const discountSchema = new Schema({
     minOrderValue: { type: Number, default: 0, min: 0 },
     
     // Shop ownership
-    shopId: { type: Schema.Types.ObjectId, ref: 'Shop', required: true, index: true },
+    // Scope: who issued the discount. 'shop' requires `shopId`, 'platform' is global
+    scope: {
+        type: String,
+        enum: ['shop', 'platform'],
+        default: 'shop',
+        index: true,
+    },
+    shopId: { type: Schema.Types.ObjectId, ref: 'Shop', required: function() { return this.scope === 'shop' }, index: true },
     
     // Applicability
     appliesTo: { 
