@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.use('/v1/api/address', require('./address/index'))
 router.use('/v1/api/order', require('./order/index'))
+router.use('/v1/api/return', require('./return/index'))
 router.use('/v1/api/checkout', require('./checkout/index'))
 router.use('/v1/api/discount', require('./discount/index'))
 router.use('/v1/api/inventory', require('./inventory/index'))

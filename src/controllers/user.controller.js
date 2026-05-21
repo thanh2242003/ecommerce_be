@@ -2,6 +2,7 @@
 
 const { SuccessResponse, CREATED } = require('../core/success.response');
 const UserService = require('../services/user.service');
+const { uploadFilesToCloudinary } = require('../helpers/cloudinary.helper');
 
 class UserController {
   // GET /v1/api/user/profile
@@ -14,7 +15,17 @@ class UserController {
 
   // PATCH /v1/api/user/profile
   updateProfile = async (req, res, next) => {
-    const { name, phone, address, avatar } = req.body;
+    const { name, phone, address } = req.body;
+    let avatar = req.body.avatar;
+
+    // If a file was uploaded via multipart/form-data, upload to Cloudinary
+    if (req.file) {
+      const urls = await uploadFilesToCloudinary([req.file], 'learning-ecommerce/avatars');
+      if (Array.isArray(urls) && urls.length > 0) {
+        avatar = urls[0];
+      }
+    }
+
     new SuccessResponse({
       message: 'Update profile successfully!',
       metadata: await UserService.updateProfile(req.user.userId, {

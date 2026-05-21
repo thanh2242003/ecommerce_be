@@ -76,6 +76,9 @@ router.get('/shop/drafts', shopAuthenticationV2, asyncHandler(ProductController.
 // PUBLISHED
 router.get('/shop/published', shopAuthenticationV2, asyncHandler(ProductController.getAllPublishForShop));
 
+// SHOP: get product detail (shop can view its own product even if not published/approved)
+router.get('/shop/:productId', shopAuthenticationV2, asyncHandler(ProductController.getProductByIdForShop));
+
 // PUBLISH
 router.patch('/:productId/publish', shopAuthenticationV2, asyncHandler(ProductController.publishProduct));
 
