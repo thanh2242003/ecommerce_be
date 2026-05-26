@@ -207,6 +207,24 @@ class ProductService {
         return formatProductResponse(found)
     }
 
+    // ================= SHOP: GET PRODUCT DETAIL (ownership check) =================
+    static async getProductByIdForShop(productId, shopId) {
+        if (!Types.ObjectId.isValid(productId)) {
+            throw new BadRequestError('Invalid product ID format')
+        }
+
+        const found = await Product.findById(productId)
+
+        if (!found) throw new BadRequestError('Product not found')
+
+        // Only the owning shop can view its product regardless of publish/approval state
+        if (String(found.product_shop) !== String(shopId)) {
+            throw new BadRequestError('Permission denied')
+        }
+
+        return formatProductResponse(found)
+    }
+
     // ================= SEARCH =================
     static async searchProducts({ keyword, categoryId, userId = null }) {
         if (userId && keyword && Types.ObjectId.isValid(userId)) {

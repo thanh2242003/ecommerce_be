@@ -20,6 +20,7 @@ const AdminOrderController = require('../../controllers/admin.order.controller')
 const AdminAnalyticsController = require('../../controllers/admin.analytics.controller');
 const AdminNotificationController = require('../../controllers/admin.notification.controller');
 const AdminDiscountController = require('../../controllers/admin.discount.controller');
+const AdminReturnController = require('../../controllers/admin.return.controller');
 
 router.post('/auth/login', asyncHandler(AdminAuthController.login));
 router.get('/profile', verifyAdmin, asyncHandler(AdminAuthController.profile));
@@ -42,6 +43,13 @@ router.delete('/products/:id', asyncHandler(AdminProductController.deleteProduct
 router.get('/orders', asyncHandler(AdminOrderController.getOrders));
 router.get('/orders/:id', asyncHandler(AdminOrderController.getOrderById));
 router.patch('/orders/:id/status', asyncHandler(AdminOrderController.updateOrderStatus));
+
+// Return request management
+router.get('/returns', asyncHandler(AdminReturnController.getReturns));
+router.patch('/returns/:id/approve', asyncHandler(AdminReturnController.approveReturn));
+router.patch('/returns/:id/reject', asyncHandler(AdminReturnController.rejectReturn));
+router.patch('/returns/:id/complete', asyncHandler(AdminReturnController.completeReturn));
+router.patch('/returns/:id/cancel', asyncHandler(AdminReturnController.adminCancelReturn));
 
 router.get('/analytics/overview', asyncHandler(AdminAnalyticsController.getOverview));
 router.post('/notifications/send-bulk', asyncHandler(AdminNotificationController.sendBulkNotifications));

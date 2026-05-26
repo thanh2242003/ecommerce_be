@@ -176,6 +176,15 @@ class ProductController {
         }).send(res);
     }
 
+    getProductByIdForShop = async (req, res, next) => {
+        const shopId = req.shopId;
+
+        new SuccessResponse({
+            message: 'Get product successfully!',
+            metadata: await ProductService.getProductByIdForShop(req.params.productId, shopId)
+        }).send(res);
+    }
+
     getReviews = async (req, res, next) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
