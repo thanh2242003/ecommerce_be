@@ -33,7 +33,7 @@ const orderSchema = new Schema({
 
     status: {
         type: String,
-        enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+        enum: ['pending', 'paid', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
         default: 'pending',
         index: true
     },
@@ -47,6 +47,8 @@ const orderSchema = new Schema({
         enum: ['cod', 'card', 'bank_transfer'],
         default: 'cod'
     },
+    paidAt: { type: Date, default: null },
+    transactionId: { type: String, default: null },
     
     discountCode: { type: String, default: null },
     notes: { type: String, default: '' }
@@ -54,5 +56,7 @@ const orderSchema = new Schema({
     timestamps: true,
     collection: COLLECTION_NAME
 });
+
+orderSchema.index({ transactionId: 1 }, { sparse: true });
 
 module.exports = model(DOCUMENT_NAME, orderSchema);

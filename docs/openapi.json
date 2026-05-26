@@ -1,0 +1,4974 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "E-commerce Backend API",
+    "version": "1.0.0",
+    "description": "Swagger/OpenAPI specification for the e-commerce backend endpoints."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "User"
+    },
+    {
+      "name": "Address"
+    },
+    {
+      "name": "Cart"
+    },
+    {
+      "name": "Category"
+    },
+    {
+      "name": "Checkout"
+    },
+    {
+      "name": "Discount"
+    },
+    {
+      "name": "Inventory"
+    },
+    {
+      "name": "Notification"
+    },
+    {
+      "name": "Order"
+    },
+    {
+      "name": "Product"
+    },
+    {
+      "name": "Search"
+    },
+    {
+      "name": "Payment"
+    },
+    {
+      "name": "Shop"
+    },
+    {
+      "name": "Admin"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/v1/api/user/signup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register user",
+        "description": "Register user",
+        "operationId": "post_v1_api_user_signup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Register user success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Register user successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "0123456789"
+                  }
+                }
+              },
+              "example": {
+                "email": "user@example.com",
+                "password": "password123",
+                "name": "John Doe",
+                "phone": "0123456789"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/user/signin": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login user",
+        "description": "Login user",
+        "operationId": "post_v1_api_user_signin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Login user success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Login user successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              },
+              "example": {
+                "email": "user@example.com",
+                "password": "password123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/shop/signup": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register shop",
+        "description": "Register shop",
+        "operationId": "post_v1_api_shop_signup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Register shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Register shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "shop@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "My Shop"
+                  }
+                }
+              },
+              "example": {
+                "email": "shop@example.com",
+                "password": "password123",
+                "name": "My Shop"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/shop/signin": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login shop",
+        "description": "Login shop",
+        "operationId": "post_v1_api_shop_signin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Login shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Login shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "shop@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              },
+              "example": {
+                "email": "shop@example.com",
+                "password": "password123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Admin login",
+        "description": "Admin login",
+        "operationId": "post_v1_api_admin_auth_login",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin login success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Admin login successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "account": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "password123"
+                  }
+                }
+              },
+              "example": {
+                "account": "admin",
+                "password": "password123"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout current session",
+        "description": "Logout current session",
+        "operationId": "post_v1_api_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Logout current session success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Logout current session successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/handlerRefreshToken": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Refresh access token",
+        "description": "Refresh access token",
+        "operationId": "post_v1_api_handlerRefreshToken",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Refresh access token success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Refresh access token successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "example": "refresh-token"
+                  }
+                }
+              },
+              "example": {
+                "refreshToken": "refresh-token"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/user/profile": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get current user profile",
+        "description": "Get current user profile",
+        "operationId": "get_v1_api_user_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get current user profile success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get current user profile successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update current user profile",
+        "description": "Update current user profile",
+        "operationId": "patch_v1_api_user_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Update current user profile success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update current user profile successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "0123456789"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "example": "https://example.com/avatar.jpg"
+                  }
+                }
+              },
+              "example": {
+                "name": "John Doe",
+                "phone": "0123456789",
+                "avatar": "https://example.com/avatar.jpg"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/user/reviews": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Get current user reviews",
+        "description": "Get current user reviews",
+        "operationId": "get_v1_api_user_reviews",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get current user reviews success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get current user reviews successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/user/password": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Change current user password",
+        "description": "Change current user password",
+        "operationId": "patch_v1_api_user_password",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Change current user password success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Change current user password successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "example": "old-password"
+                  },
+                  "newPassword": {
+                    "type": "string",
+                    "example": "new-password"
+                  }
+                }
+              },
+              "example": {
+                "currentPassword": "old-password",
+                "newPassword": "new-password"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/user/fcm-token": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Update user FCM token",
+        "description": "Update user FCM token",
+        "operationId": "patch_v1_api_user_fcm_token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Update user FCM token success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update user FCM token successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "fcm-token"
+                  }
+                }
+              },
+              "example": {
+                "token": "fcm-token"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Remove user FCM token",
+        "description": "Remove user FCM token",
+        "operationId": "delete_v1_api_user_fcm_token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Remove user FCM token success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Remove user FCM token successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/address": {
+      "post": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Create address",
+        "description": "Create address",
+        "operationId": "post_v1_api_address",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create address success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create address successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "0123456789"
+                  },
+                  "addressLine1": {
+                    "type": "string",
+                    "example": "12 Nguyen Trai"
+                  },
+                  "ward": {
+                    "type": "string",
+                    "example": "Ward 1"
+                  },
+                  "district": {
+                    "type": "string",
+                    "example": "District 1"
+                  },
+                  "province": {
+                    "type": "string",
+                    "example": "Ho Chi Minh City"
+                  },
+                  "isDefault": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              },
+              "example": {
+                "fullName": "John Doe",
+                "phone": "0123456789",
+                "addressLine1": "12 Nguyen Trai",
+                "ward": "Ward 1",
+                "district": "District 1",
+                "province": "Ho Chi Minh City",
+                "isDefault": true
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "List addresses",
+        "description": "List addresses",
+        "operationId": "get_v1_api_address",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List addresses success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List addresses successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/address/default": {
+      "get": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Get default address",
+        "description": "Get default address",
+        "operationId": "get_v1_api_address_default",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get default address success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get default address successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/address/set-default/{id}": {
+      "put": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Set default address",
+        "description": "Set default address",
+        "operationId": "put_v1_api_address_set_default_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Set default address success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Set default address successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/address/{id}": {
+      "put": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Update address",
+        "description": "Update address",
+        "operationId": "put_v1_api_address_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update address success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update address successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": "0123456789"
+                  },
+                  "addressLine1": {
+                    "type": "string",
+                    "example": "12 Nguyen Trai"
+                  }
+                }
+              },
+              "example": {
+                "fullName": "John Doe",
+                "phone": "0123456789",
+                "addressLine1": "12 Nguyen Trai"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Address"
+        ],
+        "summary": "Delete address",
+        "description": "Delete address",
+        "operationId": "delete_v1_api_address_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete address success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete address successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/cart/add": {
+      "post": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "Add item to cart",
+        "description": "Add item to cart",
+        "operationId": "post_v1_api_cart_add",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Add item to cart success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Add item to cart successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "example": "product-id"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "size": {
+                    "type": "string",
+                    "example": "M"
+                  },
+                  "color": {
+                    "type": "string",
+                    "example": "Black"
+                  }
+                }
+              },
+              "example": {
+                "productId": "product-id",
+                "quantity": 1,
+                "size": "M",
+                "color": "Black"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/cart/update": {
+      "post": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "Update cart item quantity",
+        "description": "Update cart item quantity",
+        "operationId": "post_v1_api_cart_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Update cart item quantity success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update cart item quantity successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "example": "product-id"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 2
+                  },
+                  "size": {
+                    "type": "string",
+                    "example": "M"
+                  },
+                  "color": {
+                    "type": "string",
+                    "example": "Black"
+                  }
+                }
+              },
+              "example": {
+                "productId": "product-id",
+                "quantity": 2,
+                "size": "M",
+                "color": "Black"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/cart": {
+      "delete": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "Delete cart item",
+        "description": "Delete cart item",
+        "operationId": "delete_v1_api_cart",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Delete cart item success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete cart item successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "example": "product-id"
+                  },
+                  "size": {
+                    "type": "string",
+                    "example": "M"
+                  },
+                  "color": {
+                    "type": "string",
+                    "example": "Black"
+                  }
+                }
+              },
+              "example": {
+                "productId": "product-id",
+                "size": "M",
+                "color": "Black"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Cart"
+        ],
+        "summary": "Get cart",
+        "description": "Get cart",
+        "operationId": "get_v1_api_cart",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get cart success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get cart successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/category": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Get all categories",
+        "description": "Get all categories",
+        "operationId": "get_v1_api_category",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get all categories success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get all categories successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Create category",
+        "description": "Create category",
+        "operationId": "post_v1_api_category",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create category success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create category successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "description",
+                  "image"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "T-Shirts"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Basic tee category"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/category/slug/{slug}": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Get category by slug",
+        "description": "Get category by slug",
+        "operationId": "get_v1_api_category_slug_slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get category by slug success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get category by slug successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/category/{categoryId}": {
+      "get": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Get category by id",
+        "description": "Get category by id",
+        "operationId": "get_v1_api_category_categoryId",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get category by id success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get category by id successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Update category",
+        "description": "Update category",
+        "operationId": "patch_v1_api_category_categoryId",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update category success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update category successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "description",
+                  "image"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "T-Shirts"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Updated description"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Delete category",
+        "description": "Delete category",
+        "operationId": "delete_v1_api_category_categoryId",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete category success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete category successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/category/seed/default": {
+      "post": {
+        "tags": [
+          "Category"
+        ],
+        "summary": "Seed default categories",
+        "description": "Seed default categories",
+        "operationId": "post_v1_api_category_seed_default",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Seed default categories success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Seed default categories successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/checkout/review": {
+      "post": {
+        "tags": [
+          "Checkout"
+        ],
+        "summary": "Checkout review",
+        "description": "Checkout review",
+        "operationId": "post_v1_api_checkout_review",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Checkout review success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Checkout review successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cartId": {
+                    "type": "string",
+                    "example": "cart-id"
+                  },
+                  "userId": {
+                    "type": "string",
+                    "example": "user-id"
+                  },
+                  "discountCode": {
+                    "type": "string",
+                    "example": "SAVE10"
+                  },
+                  "shippingAddressId": {
+                    "type": "string",
+                    "example": "address-id"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "example": "COD"
+                  }
+                }
+              },
+              "example": {
+                "cartId": "cart-id",
+                "userId": "user-id",
+                "discountCode": "SAVE10",
+                "shippingAddressId": "address-id",
+                "paymentMethod": "COD"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/discount/amount": {
+      "post": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Calculate discount amount",
+        "description": "Calculate discount amount",
+        "operationId": "post_v1_api_discount_amount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Calculate discount amount success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Calculate discount amount successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "SAVE10"
+                  },
+                  "totalPrice": {
+                    "type": "number",
+                    "example": 150000
+                  }
+                }
+              },
+              "example": {
+                "code": "SAVE10",
+                "totalPrice": 150000
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/discount/list_product_code": {
+      "get": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "List discount codes with products",
+        "description": "List discount codes with products",
+        "operationId": "get_v1_api_discount_list_product_code",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List discount codes with products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List discount codes with products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/discount": {
+      "post": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Create shop discount code",
+        "description": "Create shop discount code",
+        "operationId": "post_v1_api_discount",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create shop discount code success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create shop discount code successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "SAVE10"
+                  },
+                  "value": {
+                    "type": "number",
+                    "example": 10
+                  },
+                  "maxUses": {
+                    "type": "number",
+                    "example": 100
+                  },
+                  "minOrderValue": {
+                    "type": "number",
+                    "example": 100000
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "example": "2026-01-01"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "example": "2026-12-31"
+                  }
+                }
+              },
+              "example": {
+                "code": "SAVE10",
+                "value": 10,
+                "maxUses": 100,
+                "minOrderValue": 100000,
+                "startDate": "2026-01-01",
+                "endDate": "2026-12-31"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "List shop discount codes",
+        "description": "List shop discount codes",
+        "operationId": "get_v1_api_discount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List shop discount codes success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List shop discount codes successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/discount/{id}": {
+      "patch": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Update discount code",
+        "description": "Update discount code",
+        "operationId": "patch_v1_api_discount_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update discount code success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update discount code successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "SAVE15"
+                  },
+                  "value": {
+                    "type": "number",
+                    "example": 15
+                  }
+                }
+              },
+              "example": {
+                "code": "SAVE15",
+                "value": 15
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Discount"
+        ],
+        "summary": "Delete discount code",
+        "description": "Delete discount code",
+        "operationId": "delete_v1_api_discount_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete discount code success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete discount code successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/inventory": {
+      "post": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Create or update inventory",
+        "description": "Create or update inventory",
+        "operationId": "post_v1_api_inventory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Create or update inventory success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Create or update inventory successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "string",
+                    "example": "product-id"
+                  },
+                  "stock": {
+                    "type": "number",
+                    "example": 20
+                  },
+                  "reserved": {
+                    "type": "number",
+                    "example": 0
+                  },
+                  "warehouse": {
+                    "type": "string",
+                    "example": "main"
+                  }
+                }
+              },
+              "example": {
+                "productId": "product-id",
+                "stock": 20,
+                "reserved": 0,
+                "warehouse": "main"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Get shop inventory",
+        "description": "Get shop inventory",
+        "operationId": "get_v1_api_inventory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get shop inventory success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop inventory successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/inventory/summary": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Get inventory summary",
+        "description": "Get inventory summary",
+        "operationId": "get_v1_api_inventory_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get inventory summary success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get inventory summary successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/inventory/{id}": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Get inventory by id",
+        "description": "Get inventory by id",
+        "operationId": "get_v1_api_inventory_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get inventory by id success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get inventory by id successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Update inventory",
+        "description": "Update inventory",
+        "operationId": "patch_v1_api_inventory_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update inventory success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update inventory successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "stock": {
+                    "type": "number",
+                    "example": 30
+                  },
+                  "reserved": {
+                    "type": "number",
+                    "example": 2
+                  }
+                }
+              },
+              "example": {
+                "stock": 30,
+                "reserved": 2
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Delete inventory",
+        "description": "Delete inventory",
+        "operationId": "delete_v1_api_inventory_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete inventory success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete inventory successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/fcm-token": {
+      "post": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Register FCM token",
+        "description": "Register FCM token",
+        "operationId": "post_v1_api_fcm_token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Register FCM token success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Register FCM token successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "fcm-token"
+                  }
+                }
+              },
+              "example": {
+                "token": "fcm-token"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Delete FCM token",
+        "description": "Delete FCM token",
+        "operationId": "delete_v1_api_fcm_token",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Delete FCM token success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete FCM token successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/notifications/send": {
+      "post": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Send notification as admin",
+        "description": "Send notification as admin",
+        "operationId": "post_v1_api_notifications_send",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Send notification as admin success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Send notification as admin successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "user-id"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Order update"
+                  },
+                  "body": {
+                    "type": "string",
+                    "example": "Your order has been shipped."
+                  }
+                }
+              },
+              "example": {
+                "userId": "user-id",
+                "title": "Order update",
+                "body": "Your order has been shipped."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/notifications/{userId}": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Get notifications by user",
+        "description": "Get notifications by user",
+        "operationId": "get_v1_api_notifications_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get notifications by user success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get notifications by user successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/notifications/read/{id}": {
+      "patch": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Mark notification as read",
+        "description": "Mark notification as read",
+        "operationId": "patch_v1_api_notifications_read_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mark notification as read success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Mark notification as read successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/notifications/read-all/{userId}": {
+      "patch": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Mark all notifications as read",
+        "description": "Mark all notifications as read",
+        "operationId": "patch_v1_api_notifications_read_all_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mark all notifications as read success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Mark all notifications as read successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/notifications/unread-count/{userId}": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Get unread notification count",
+        "description": "Get unread notification count",
+        "operationId": "get_v1_api_notifications_unread_count_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get unread notification count success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get unread notification count successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/notifications/{id}": {
+      "delete": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Delete notification",
+        "description": "Delete notification",
+        "operationId": "delete_v1_api_notifications_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete notification success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete notification successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/order/orders": {
+      "post": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Create order",
+        "description": "Create order",
+        "operationId": "post_v1_api_order_orders",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create order success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create order successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "productId": {
+                          "type": "string",
+                          "example": "product-id"
+                        },
+                        "quantity": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "size": {
+                          "type": "string",
+                          "example": "M"
+                        },
+                        "color": {
+                          "type": "string",
+                          "example": "Black"
+                        }
+                      },
+                      "example": {
+                        "productId": "product-id",
+                        "quantity": 1,
+                        "size": "M",
+                        "color": "Black"
+                      }
+                    },
+                    "example": [
+                      {
+                        "productId": "product-id",
+                        "quantity": 1,
+                        "size": "M",
+                        "color": "Black"
+                      }
+                    ]
+                  },
+                  "addressId": {
+                    "type": "string",
+                    "example": "address-id"
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "example": "COD"
+                  },
+                  "note": {
+                    "type": "string",
+                    "example": "Leave at the door"
+                  }
+                }
+              },
+              "example": {
+                "items": [
+                  {
+                    "productId": "product-id",
+                    "quantity": 1,
+                    "size": "M",
+                    "color": "Black"
+                  }
+                ],
+                "addressId": "address-id",
+                "paymentMethod": "COD",
+                "note": "Leave at the door"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Get my orders",
+        "description": "Get my orders",
+        "operationId": "get_v1_api_order_orders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get my orders success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get my orders successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/order/orders/{id}": {
+      "get": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Get order by id",
+        "description": "Get order by id",
+        "operationId": "get_v1_api_order_orders_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get order by id success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get order by id successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/order/orders/{id}/cancel": {
+      "patch": {
+        "tags": [
+          "Order"
+        ],
+        "summary": "Cancel order",
+        "description": "Cancel order",
+        "operationId": "patch_v1_api_order_orders_id_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancel order success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Cancel order successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/search": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Search products",
+        "description": "Search products",
+        "operationId": "get_v1_api_product_search",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "shirt"
+            },
+            "description": "q"
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "category-id"
+            },
+            "description": "categoryId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Search products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product/top-selling": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get top selling products",
+        "description": "Get top selling products",
+        "operationId": "get_v1_api_product_top_selling",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "description": "limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get top selling products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get top selling products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product/suggested/{userId}": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get suggested products",
+        "description": "Get suggested products",
+        "operationId": "get_v1_api_product_suggested_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get suggested products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get suggested products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get products",
+        "description": "Get products",
+        "operationId": "get_v1_api_product",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "category-id"
+            },
+            "description": "categoryId"
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "100000"
+            },
+            "description": "minPrice"
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "500000"
+            },
+            "description": "maxPrice"
+          },
+          {
+            "name": "gender",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            },
+            "description": "gender"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "-createdAt"
+            },
+            "description": "sort"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            },
+            "description": "page"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "20"
+            },
+            "description": "limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Create product",
+        "description": "Create product",
+        "operationId": "post_v1_api_product",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "categoryId",
+                  "price",
+                  "gender",
+                  "description",
+                  "sizes",
+                  "colors",
+                  "variants",
+                  "images"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "New T-Shirt"
+                  },
+                  "categoryId": {
+                    "type": "string",
+                    "example": "category-id"
+                  },
+                  "price": {
+                    "type": "string",
+                    "example": "250000"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "example": "1"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Premium quality t-shirt"
+                  },
+                  "sizes": {
+                    "type": "string",
+                    "example": "[\"S\",\"M\",\"L\"]"
+                  },
+                  "colors": {
+                    "type": "string",
+                    "example": "[{\"title\":\"Black\",\"rgb\":[0,0,0]}]"
+                  },
+                  "variants": {
+                    "type": "string",
+                    "example": "[{\"color\":\"Black\",\"size\":\"M\",\"stock\":10}]"
+                  },
+                  "images": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product/{productId}/reviews": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get product reviews",
+        "description": "Get product reviews",
+        "operationId": "get_v1_api_product_productId_reviews",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            },
+            "description": "page"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "description": "limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get product reviews success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get product reviews successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Add review",
+        "description": "Add review",
+        "operationId": "post_v1_api_product_productId_reviews",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Add review success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Add review successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rating": {
+                    "type": "number",
+                    "example": 5
+                  },
+                  "comment": {
+                    "type": "string",
+                    "example": "Great product"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": []
+                  }
+                }
+              },
+              "example": {
+                "rating": 5,
+                "comment": "Great product",
+                "images": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product/{productId}": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get product detail",
+        "description": "Get product detail",
+        "operationId": "get_v1_api_product_productId",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get product detail success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get product detail successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Update product",
+        "description": "Update product",
+        "operationId": "patch_v1_api_product_productId",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "price",
+                  "images"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Updated T-Shirt"
+                  },
+                  "price": {
+                    "type": "string",
+                    "example": "270000"
+                  },
+                  "images": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Delete product",
+        "description": "Delete product",
+        "operationId": "delete_v1_api_product_productId",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{productId}/reviews/{reviewId}": {
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Update review",
+        "description": "Update review",
+        "operationId": "patch_v1_api_product_productId_reviews_reviewId",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update review success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update review successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rating": {
+                    "type": "number",
+                    "example": 4
+                  },
+                  "comment": {
+                    "type": "string",
+                    "example": "Updated review"
+                  }
+                }
+              },
+              "example": {
+                "rating": 4,
+                "comment": "Updated review"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Delete review",
+        "description": "Delete review",
+        "operationId": "delete_v1_api_product_productId_reviews_reviewId",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete review success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete review successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{productId}/reviews/{reviewId}/reply": {
+      "post": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Reply to review as shop",
+        "description": "Reply to review as shop",
+        "operationId": "post_v1_api_product_productId_reviews_reviewId_reply",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reply to review as shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Reply to review as shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reply": {
+                    "type": "string",
+                    "example": "Thanks for the feedback"
+                  }
+                }
+              },
+              "example": {
+                "reply": "Thanks for the feedback"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/product/shop/drafts": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get draft products for shop",
+        "description": "Get draft products for shop",
+        "operationId": "get_v1_api_product_shop_drafts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get draft products for shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get draft products for shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/shop/published": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get published products for shop",
+        "description": "Get published products for shop",
+        "operationId": "get_v1_api_product_shop_published",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get published products for shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get published products for shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{productId}/publish": {
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Publish product",
+        "description": "Publish product",
+        "operationId": "patch_v1_api_product_productId_publish",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publish product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Publish product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{productId}/unpublish": {
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Unpublish product",
+        "description": "Unpublish product",
+        "operationId": "patch_v1_api_product_productId_unpublish",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unpublish product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Unpublish product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{id}/soft-delete": {
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Soft delete product",
+        "description": "Soft delete product",
+        "operationId": "patch_v1_api_product_id_soft_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Soft delete product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Soft delete product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{id}/restore": {
+      "patch": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Restore soft deleted product",
+        "description": "Restore soft deleted product",
+        "operationId": "patch_v1_api_product_id_restore",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Restore soft deleted product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Restore soft deleted product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/{id}/permanent": {
+      "delete": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Permanently delete product",
+        "description": "Permanently delete product",
+        "operationId": "delete_v1_api_product_id_permanent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permanently delete product success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Permanently delete product successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/product/shop/deleted": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get deleted products",
+        "description": "Get deleted products",
+        "operationId": "get_v1_api_product_shop_deleted",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get deleted products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get deleted products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/search/history": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Save search history",
+        "description": "Save search history",
+        "operationId": "post_v1_api_search_history",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Save search history success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Save search history successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "example": "user-id"
+                  },
+                  "keyword": {
+                    "type": "string",
+                    "example": "shirt"
+                  }
+                }
+              },
+              "example": {
+                "userId": "user-id",
+                "keyword": "shirt"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/search/history/{userId}": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Get search history",
+        "description": "Get search history",
+        "operationId": "get_v1_api_search_history_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get search history success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get search history successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Clear search history",
+        "description": "Clear search history",
+        "operationId": "delete_v1_api_search_history_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Clear search history success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Clear search history successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/sepay/create": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Create SePay payment",
+        "description": "Create SePay payment",
+        "operationId": "post_api_payments_sepay_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create SePay payment success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create SePay payment successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": {
+                    "type": "string",
+                    "example": "order-id"
+                  }
+                }
+              },
+              "example": {
+                "orderId": "order-id"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{paymentId}/status": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Get payment status",
+        "description": "Get payment status",
+        "operationId": "get_api_payments_paymentId_status",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get payment status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get payment status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/payments/sepay/webhook": {
+      "post": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "SePay webhook callback",
+        "description": "SePay webhook callback",
+        "operationId": "post_api_payments_sepay_webhook",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "SePay webhook callback success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "SePay webhook callback successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "number",
+                    "example": 92704
+                  },
+                  "gateway": {
+                    "type": "string",
+                    "example": "Vietcombank"
+                  },
+                  "transactionDate": {
+                    "type": "string",
+                    "example": "2024-07-02 11:08:33"
+                  },
+                  "accountNumber": {
+                    "type": "string",
+                    "example": "1017588888"
+                  },
+                  "subAccount": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "OD3E8F2301020304"
+                  },
+                  "content": {
+                    "type": "string",
+                    "example": "OD3E8F2301020304 chuyen tien"
+                  },
+                  "transferType": {
+                    "type": "string",
+                    "example": "in"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "NGUYEN VAN A chuyen tien"
+                  },
+                  "transferAmount": {
+                    "type": "number",
+                    "example": 350000
+                  },
+                  "accumulated": {
+                    "type": "number",
+                    "example": 105000000
+                  },
+                  "referenceCode": {
+                    "type": "string",
+                    "example": "FT24012345678"
+                  }
+                }
+              },
+              "example": {
+                "id": 92704,
+                "gateway": "Vietcombank",
+                "transactionDate": "2024-07-02 11:08:33",
+                "accountNumber": "1017588888",
+                "subAccount": "",
+                "code": "OD3E8F2301020304",
+                "content": "OD3E8F2301020304 chuyen tien",
+                "transferType": "in",
+                "description": "NGUYEN VAN A chuyen tien",
+                "transferAmount": 350000,
+                "accumulated": 105000000,
+                "referenceCode": "FT24012345678"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/history": {
+      "get": {
+        "tags": [
+          "Payment"
+        ],
+        "summary": "Get payment history",
+        "description": "Get payment history",
+        "operationId": "get_api_payments_history",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1"
+            },
+            "description": "page"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "10"
+            },
+            "description": "limit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get payment history success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get payment history successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/shop/orders": {
+      "get": {
+        "tags": [
+          "Shop"
+        ],
+        "summary": "Get shop orders",
+        "description": "Get shop orders",
+        "operationId": "get_v1_api_shop_orders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get shop orders success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop orders successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/shop/orders/{id}": {
+      "get": {
+        "tags": [
+          "Shop"
+        ],
+        "summary": "Get shop order detail",
+        "description": "Get shop order detail",
+        "operationId": "get_v1_api_shop_orders_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get shop order detail success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop order detail successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/shop/orders/{id}/status": {
+      "patch": {
+        "tags": [
+          "Shop"
+        ],
+        "summary": "Update shop order status",
+        "description": "Update shop order status",
+        "operationId": "patch_v1_api_shop_orders_id_status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update shop order status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update shop order status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "shipped"
+                  }
+                }
+              },
+              "example": {
+                "status": "shipped"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/shop/dashboard": {
+      "get": {
+        "tags": [
+          "Shop"
+        ],
+        "summary": "Get shop dashboard",
+        "description": "Get shop dashboard",
+        "operationId": "get_v1_api_shop_dashboard",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get shop dashboard success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop dashboard successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/shop/status": {
+      "get": {
+        "tags": [
+          "Shop"
+        ],
+        "summary": "Get shop status",
+        "description": "Get shop status",
+        "operationId": "get_v1_api_shop_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get shop status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/profile": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get admin profile",
+        "description": "Get admin profile",
+        "operationId": "get_v1_api_admin_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get admin profile success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get admin profile successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/shops": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List shops",
+        "description": "List shops",
+        "operationId": "get_v1_api_admin_shops",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List shops success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List shops successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/shops/{shopId}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get shop by id",
+        "description": "Get shop by id",
+        "operationId": "get_v1_api_admin_shops_shopId",
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get shop by id success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get shop by id successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/shops/{shopId}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update shop status",
+        "description": "Update shop status",
+        "operationId": "patch_v1_api_admin_shops_shopId_status",
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update shop status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update shop status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "active"
+                  }
+                }
+              },
+              "example": {
+                "status": "active"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/shops/{shopId}/verify": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Verify shop",
+        "description": "Verify shop",
+        "operationId": "patch_v1_api_admin_shops_shopId_verify",
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verify shop success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Verify shop successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List users",
+        "description": "List users",
+        "operationId": "get_v1_api_admin_users",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List users success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List users successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/users/{userId}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get user by id",
+        "description": "Get user by id",
+        "operationId": "get_v1_api_admin_users_userId",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get user by id success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get user by id successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/users/{userId}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update user status",
+        "description": "Update user status",
+        "operationId": "patch_v1_api_admin_users_userId_status",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update user status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update user status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "active"
+                  }
+                }
+              },
+              "example": {
+                "status": "active"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/products": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List products",
+        "description": "List products",
+        "operationId": "get_v1_api_admin_products",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List products success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List products successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/products/{id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update product status",
+        "description": "Update product status",
+        "operationId": "patch_v1_api_admin_products_id_status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update product status success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update product status successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "approved"
+                  }
+                }
+              },
+              "example": {
+                "status": "approved"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/products/{id}": {
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete product as admin",
+        "description": "Delete product as admin",
+        "operationId": "delete_v1_api_admin_products_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete product as admin success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete product as admin successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/orders": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "List orders",
+        "description": "List orders",
+        "operationId": "get_v1_api_admin_orders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List orders success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "List orders successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/orders/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get order by id as admin",
+        "description": "Get order by id as admin",
+        "operationId": "get_v1_api_admin_orders_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Get order by id as admin success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get order by id as admin successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/orders/{id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update order status as admin",
+        "description": "Update order status as admin",
+        "operationId": "patch_v1_api_admin_orders_id_status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update order status as admin success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update order status as admin successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "completed"
+                  }
+                }
+              },
+              "example": {
+                "status": "completed"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/analytics/overview": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Get admin analytics overview",
+        "description": "Get admin analytics overview",
+        "operationId": "get_v1_api_admin_analytics_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get admin analytics overview success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Get admin analytics overview successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/api/admin/notifications/send-bulk": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Send bulk notifications",
+        "description": "Send bulk notifications",
+        "operationId": "post_v1_api_admin_notifications_send_bulk",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Send bulk notifications success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Send bulk notifications successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Promotion"
+                  },
+                  "body": {
+                    "type": "string",
+                    "example": "Weekend sale is live"
+                  },
+                  "userIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "example": "user-id-1"
+                    },
+                    "example": [
+                      "user-id-1",
+                      "user-id-2"
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "title": "Promotion",
+                "body": "Weekend sale is live",
+                "userIds": [
+                  "user-id-1",
+                  "user-id-2"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/discounts": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create platform discount",
+        "description": "Create platform discount",
+        "operationId": "post_v1_api_admin_discounts",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Create platform discount success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 201,
+                  "message": "Create platform discount successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PLATFORM10"
+                  },
+                  "value": {
+                    "type": "number",
+                    "example": 10
+                  },
+                  "scope": {
+                    "type": "string",
+                    "example": "platform"
+                  }
+                }
+              },
+              "example": {
+                "code": "PLATFORM10",
+                "value": 10,
+                "scope": "platform"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/discounts/{id}": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update platform discount",
+        "description": "Update platform discount",
+        "operationId": "patch_v1_api_admin_discounts_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Update platform discount success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Update platform discount successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "example": 15
+                  }
+                }
+              },
+              "example": {
+                "value": 15
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Delete platform discount",
+        "description": "Delete platform discount",
+        "operationId": "delete_v1_api_admin_discounts_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delete platform discount success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Delete platform discount successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    }
+  }
+}

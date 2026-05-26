@@ -77,7 +77,7 @@ const normalizeOrderStatus = (status) => {
         return null;
     }
 
-    const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'paid', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (validStatuses.includes(value)) {
         return value;
     }
