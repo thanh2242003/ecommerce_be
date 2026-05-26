@@ -11,6 +11,84 @@ const { BadRequestError, NotFoundError } = require('../core/error.response');
 
 class OrderService {
 
+    static async markOrderPaidFromPayment({ orderId, transactionId, paymentMethod = 'bank_transfer', session = null }) {
+        const order = await Order.findById(orderId).session(session);
+
+        if (!order) {
+            throw new NotFoundError('Order not found');
+        }
+
+        if (order.status === 'cancelled') {
+            throw new BadRequestError('Cannot mark cancelled order as paid');
+        }
+
+        if (order.status === 'paid') {
+            return order;
+        }
+
+        if (!['pending', 'confirmed'].includes(order.status)) {
+            throw new BadRequestError(`Cannot mark order as paid from status "${order.status}"`);
+        }
+
+        order.status = 'paid';
+        order.paidAt = new Date();
+        order.transactionId = transactionId;
+        order.paymentMethod = paymentMethod;
+        await order.save({ session });
+
+        return order;
+    }
+
+    static async cancelOrderByPaymentTimeout({ orderId, cancelReason = 'Payment timeout' }) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+
+        try {
+            const order = await Order.findById(orderId).session(session);
+            if (!order) {
+                throw new NotFoundError('Order not found');
+            }
+
+            if (order.status === 'cancelled') {
+                await session.commitTransaction();
+                return order.toObject();
+            }
+
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                await session.commitTransaction();
+                return order.toObject();
+            }
+
+            order.status = 'cancelled';
+            order.cancelReason = cancelReason;
+            order.cancelledAt = new Date();
+            order.cancelledBy = 'admin';
+            await order.save({ session });
+
+            for (const item of order.items) {
+                await Product.findOneAndUpdate(
+                    { _id: item.productId, 'variants._id': item.variantId },
+                    { $inc: { 'variants.$.stock': item.quantity, salesNumber: -item.quantity } },
+                    { session }
+                );
+
+                await Inventory.findOneAndUpdate(
+                    { productId: item.productId, shopId: order.shopId },
+                    { $inc: { totalQuantity: item.quantity } },
+                    { session }
+                );
+            }
+
+            await session.commitTransaction();
+            return order.toObject();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
+        }
+    }
+
     /**
      * Create a new order — supports both "cart" and "buy_now" flows.
      *

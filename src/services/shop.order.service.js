@@ -19,7 +19,7 @@ const getShopOrders = async (shopId, query = {}) => {
 
     if (query.status) {
         // Validate status
-        const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+        const validStatuses = ['pending', 'paid', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
         if (!validStatuses.includes(query.status)) {
             throw new BadRequestError(`Invalid status: ${query.status}`);
         }
