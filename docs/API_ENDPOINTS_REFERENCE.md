@@ -133,6 +133,91 @@ Response: 200 OK
 }
 ```
 
+### 1.8 Get User Profile
+
+```http
+GET /v1/api/user/profile
+Authorization: Bearer {userAccessToken}
+
+Response: 200 OK
+{
+  "code": 200,
+  "message": "Get profile successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "John Doe",
+    "email": "user@example.com",
+    "phone": "0123456789",
+    "address": "123 Main Street",
+    "avatar": "https://example.com/avatar.jpg",
+    "status": "active",
+    "roles": ["user"],
+    "verify": true
+  }
+}
+```
+
+**Mục đích:** lấy thông tin profile hiện tại của user đang đăng nhập.
+
+**Yêu cầu xác thực:**
+- Bắt buộc có `Authorization: Bearer {userAccessToken}`.
+- Route đang nằm dưới middleware `authenticationV2`.
+
+**Dữ liệu trả về hiện tại trong code:**
+- `name`
+- `email`
+- `phone`
+- `address`
+- `avatar`
+- `status`
+- `roles`
+- `verify`
+
+### 1.9 Update User Profile
+
+```http
+PATCH /v1/api/user/profile
+Authorization: Bearer {userAccessToken}
+Content-Type: application/json
+
+{
+  "name": "John Updated",
+  "phone": "0987654321",
+  "address": "456 New Street",
+  "avatar": "https://example.com/new-avatar.jpg"
+}
+
+Response: 200 OK
+{
+  "code": 200,
+  "message": "Update profile successfully!",
+  "metadata": {
+    "_id": "user_id",
+    "name": "John Updated",
+    "email": "user@example.com",
+    "phone": "0987654321",
+    "address": "456 New Street",
+    "avatar": "https://example.com/new-avatar.jpg",
+    "status": "active",
+    "roles": ["user"],
+    "verify": true
+  }
+}
+```
+
+**Mục đích:** cập nhật các thông tin profile cơ bản của user.
+
+**Trường có thể cập nhật:**
+- `name`
+- `phone`
+- `address`
+- `avatar`
+
+**Hành vi hiện tại trong code:**
+- Chỉ cập nhật các field được gửi lên trong body.
+- Nếu một field không truyền lên, giá trị cũ được giữ nguyên.
+- API trả về user sau khi cập nhật thành công.
+
 ---
 
 ## Phần 2: Product Management (Quản Lý Sản Phẩm)
@@ -140,9 +225,33 @@ Response: 200 OK
 ### 2.1 Get All Products (Public)
 
 ```http
-GET /v1/api/product?category=123&price[gte]=100&price[lte]=500&gender=1&page=1&limit=20
+GET /v1/api/product?categoryId=123&price[gte]=100&price[lte]=500&gender=1&page=1&limit=20
+```
 
-Response: 200 OK
+
+**Mục đích:** lấy danh sách sản phẩm công khai và lọc theo `categoryId`, khoảng giá, giới tính và phân trang.
+
+**Query params:**
+- `categoryId`: lọc theo danh mục sản phẩm.
+- `minPrice`: giá tối thiểu.
+- `maxPrice`: giá tối đa.
+- `gender`: lọc theo giới tính.
+- `sort`: trường sắp xếp, mặc định là `createdAt`.
+- `page`: trang hiện tại, mặc định `1`.
+- `limit`: số lượng bản ghi mỗi trang, mặc định `10`.
+
+**Ví dụ:**
+```http
+GET /v1/api/product?categoryId=66f1b2c9e12a4a0012345678&minPrice=100000&maxPrice=500000&gender=1&page=1&limit=20
+```
+
+**Hành vi hiện tại trong code:**
+- Nếu có `categoryId`, hệ thống thêm điều kiện `query.categoryId = categoryId`.
+- Nếu không truyền `categoryId`, API vẫn trả sản phẩm công khai theo mặc định `isPublished = true` và `status = approved`.
+- Nếu truyền thêm `minPrice` hoặc `maxPrice`, hệ thống lọc theo khoảng giá tương ứng.
+
+**Response: 200 OK**
+```json
 {
   "code": 200,
   "metadata": {
@@ -193,10 +302,25 @@ Response: 200 OK
 ### 2.3 Search Products
 
 ```http
-GET /v1/api/product/search?keyword=shirt&page=1
-
-Response: 200 OK
+GET /v1/api/product/search?q=t-shirt&categoryId=123
 ```
+
+**Mục đích:** tìm kiếm sản phẩm theo từ khóa và có thể kết hợp lọc theo danh mục.
+
+**Query params:**
+- `q`: từ khóa tìm kiếm trong `title`.
+- `categoryId`: danh mục cần lọc thêm.
+
+**Ví dụ kết hợp search + category:**
+```http
+GET /v1/api/product/search?q=shirt&categoryId=66f1b2c9e12a4a0012345678
+```
+
+**Hành vi hiện tại trong code:**
+- API chỉ tìm trong các sản phẩm `isPublished = true` và `status = approved`.
+- Nếu truyền `q`, hệ thống match theo regex không phân biệt hoa/thường trên trường `title`.
+- Nếu truyền `categoryId`, hệ thống lọc thêm theo `categoryId`.
+- Search route đang dùng `optionalAuth`, nên nếu người dùng đã đăng nhập thì keyword có thể được lưu vào search history.
 
 ### 2.4 Get Top Selling Products
 

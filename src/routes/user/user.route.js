@@ -6,6 +6,7 @@ const router = express.Router();
 const UserController = require('../../controllers/user.controller');
 const { asyncHandler } = require('../../auth/checkAuth');
 const { authenticationV2 } = require('../../auth/authUtils');
+const upload = require('../../configs/multer.config');
 
 // Protected: cần token
 router.use(authenticationV2);
@@ -16,8 +17,8 @@ router.get('/profile', asyncHandler(UserController.getProfile));
 // GET /v1/api/user/reviews
 router.get('/reviews', asyncHandler(UserController.getMyReviews));
 
-// PATCH /v1/api/user/profile
-router.patch('/profile', asyncHandler(UserController.updateProfile));
+// PATCH /v1/api/user/profile (accepts multipart/form-data with optional `avatar` file)
+router.patch('/profile', upload.single('avatar'), asyncHandler(UserController.updateProfile));
 
 // PATCH /v1/api/user/password
 router.patch('/password', asyncHandler(UserController.changePassword));
