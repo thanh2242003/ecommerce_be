@@ -93,6 +93,22 @@ const parseSePayPayload = (rawBody) => {
     return JSON.parse(bodyText || '{}');
 };
 
+const resolveSePayPaymentCode = (payload = {}) => {
+    const directCode = String(payload.code || '').trim();
+    if (directCode) {
+        return directCode;
+    }
+
+    const contentCode = String(payload.content || '').trim();
+    if (contentCode) {
+        return contentCode;
+    }
+
+    const description = String(payload.description || '');
+    const matched = description.match(/OD[A-Z0-9]+/i);
+    return matched ? matched[0].toUpperCase() : '';
+};
+
 const validateSePayPayload = (payload) => {
     if (!payload || typeof payload !== 'object') {
         return { ok: false, reason: 'Invalid payload' };
@@ -102,8 +118,9 @@ const validateSePayPayload = (payload) => {
         return { ok: false, reason: 'Missing payload.id' };
     }
 
-    if (!payload.code) {
-        return { ok: false, reason: 'Missing payload.code' };
+    const resolvedCode = resolveSePayPaymentCode(payload);
+    if (!resolvedCode) {
+        return { ok: false, reason: 'Missing payment code in payload.code/content/description' };
     }
 
     if (!payload.transferType) {
@@ -121,4 +138,5 @@ module.exports = {
     verifySePaySignature,
     parseSePayPayload,
     validateSePayPayload,
+    resolveSePayPaymentCode,
 };

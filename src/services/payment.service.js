@@ -26,6 +26,7 @@ const {
     verifySePaySignature,
     parseSePayPayload,
     validateSePayPayload,
+    resolveSePayPaymentCode,
 } = require('../utils/sepayWebhook');
 
 const PAYMENT_TIMEOUT_MINUTES = Number(process.env.SEPAY_PAYMENT_TIMEOUT_MINUTES || 15);
@@ -46,7 +47,7 @@ class PaymentService {
             bankName,
             bankAccount,
             transferContent: paymentCode,
-            qrText: `BANK:${bankName}|ACCOUNT:${bankAccount}|AMOUNT:${amount}|CONTENT:${paymentCode}`,
+            qrText: `https://qr.sepay.vn/img?acc=${encodeURIComponent(bankAccount)}&bank=${encodeURIComponent(bankName)}&amount=${amount}&des=${encodeURIComponent(paymentCode)}`,
         };
     }
 
@@ -184,7 +185,8 @@ class PaymentService {
                 return { duplicate: true };
             }
 
-            const payment = await findPaymentByCode({ paymentCode: String(payload.code) });
+            const paymentCode = resolveSePayPaymentCode(payload);
+            const payment = await findPaymentByCode({ paymentCode });
             if (!payment) {
                 await markWebhookProcessed({ eventId, processResult: 'payment_not_found' });
                 return { ignored: true };
