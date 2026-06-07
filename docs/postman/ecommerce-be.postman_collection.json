@@ -1085,7 +1085,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"product-id\",\n      \"quantity\": 1,\n      \"size\": \"M\",\n      \"color\": \"Black\"\n    }\n  ],\n  \"addressId\": \"address-id\",\n  \"paymentMethod\": \"COD\",\n  \"note\": \"Leave at the door\"\n}"
+              "raw": "{\n  \"type\": \"buy_now\",\n  \"addressId\": \"address-id\",\n  \"productId\": \"product-id\",\n  \"variantId\": \"variant-id\",\n  \"quantity\": 1,\n  \"finalPrice\": 350000,\n  \"paymentMethod\": \"bank_transfer\"\n}"
             }
           }
         },
@@ -1802,7 +1802,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"shipped\"\n}"
+              "raw": "{\n  \"status\": \"shipping\"\n}"
             }
           }
         },
@@ -2099,7 +2099,32 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"completed\"\n}"
+              "raw": "{\n  \"status\": \"delivered\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Complete manual refund for order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/api/admin/orders/{{id}}/refund/complete"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Refunded manually via bank transfer\"\n}"
             }
           }
         },

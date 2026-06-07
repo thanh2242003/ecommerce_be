@@ -14,7 +14,8 @@ class ShopOrderController {
         const query = {
             page: req.query.page,
             limit: req.query.limit,
-            status: req.query.status
+            status: req.query.status,
+            paymentStatus: req.query.paymentStatus
         };
 
         const { orders, pagination } = await ShopOrderService.getShopOrders(shopId, query);

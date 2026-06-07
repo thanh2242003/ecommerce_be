@@ -4,6 +4,18 @@ const orderModel = require('../models/order.model');
 const { BadRequestError, NotFoundError, ForbiddenError } = require('../core/error.response');
 const { validateOrderStatusTransition } = require('../utils/validation');
 const { parsePagination, getPaginationMetadata } = require('../utils/pagination');
+const OrderService = require('./order.service');
+
+const VALID_ORDER_STATUSES = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
+const VALID_PAYMENT_STATUSES = ['unpaid', 'pending', 'paid', 'failed', 'expired', 'refund_pending', 'refunded'];
+
+const shopVisiblePaymentFilter = {
+    $or: [
+        { paymentMethod: 'cod' },
+        { paymentMethod: { $exists: false } },
+        { paymentMethod: 'bank_transfer', paymentStatus: 'paid' },
+    ],
+};
 
 /**
  * Get all orders for a shop with optional filters
@@ -15,15 +27,20 @@ const getShopOrders = async (shopId, query = {}) => {
     const { page, limit, skip } = parsePagination(query);
 
     // Build filter
-    const filter = { shopId };
+    const filter = { shopId, ...shopVisiblePaymentFilter };
 
     if (query.status) {
-        // Validate status
-        const validStatuses = ['pending', 'paid', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
-        if (!validStatuses.includes(query.status)) {
+        if (!VALID_ORDER_STATUSES.includes(query.status)) {
             throw new BadRequestError(`Invalid status: ${query.status}`);
         }
         filter.status = query.status;
+    }
+
+    if (query.paymentStatus) {
+        if (!VALID_PAYMENT_STATUSES.includes(query.paymentStatus)) {
+            throw new BadRequestError(`Invalid paymentStatus: ${query.paymentStatus}`);
+        }
+        filter.paymentStatus = query.paymentStatus;
     }
 
     // Get total count for pagination
@@ -55,7 +72,7 @@ const getShopOrders = async (shopId, query = {}) => {
  */
 const getOrderById = async (orderId, shopId) => {
     const order = await orderModel
-        .findById(orderId)
+        .findOne({ _id: orderId, ...shopVisiblePaymentFilter })
         .populate('userId', 'name email phone')
         .populate('items.productId', 'title images price')
         .lean();
@@ -91,11 +108,38 @@ const updateOrderStatus = async (orderId, shopId, newStatus) => {
         throw new ForbiddenError('You do not have permission to update this order');
     }
 
+    if (order.status === newStatus) {
+        return orderModel
+            .findById(orderId)
+            .populate('userId', 'name email phone')
+            .populate('items.productId', 'title images price')
+            .lean();
+    }
+
+    if (order.paymentMethod !== 'cod' && order.paymentStatus !== 'paid') {
+        throw new ForbiddenError('Online payment order is not available for shop processing until paid');
+    }
+
     // Validate status transition
     validateOrderStatusTransition(order.status, newStatus);
 
+    if (newStatus === 'cancelled') {
+        await OrderService.cancelOrderByActor({
+            orderId,
+            cancelledBy: 'shop',
+            cancelReason: 'Cancelled by shop',
+        });
+
+        return orderModel
+            .findById(orderId)
+            .populate('userId', 'name email phone')
+            .populate('items.productId', 'title images price')
+            .lean();
+    }
+
     // Update order
     order.status = newStatus;
+    OrderService.applyDeliveredPaymentStatus(order);
     await order.save();
 
     const updatedOrder = await orderModel
@@ -132,14 +176,9 @@ const getOrderStats = async (shopId) => {
                         $cond: [{ $eq: ['$status', 'confirmed'] }, 1, 0]
                     }
                 },
-                processingCount: {
+                shippingCount: {
                     $sum: {
-                        $cond: [{ $eq: ['$status', 'processing'] }, 1, 0]
-                    }
-                },
-                shippedCount: {
-                    $sum: {
-                        $cond: [{ $eq: ['$status', 'shipped'] }, 1, 0]
+                        $cond: [{ $eq: ['$status', 'shipping'] }, 1, 0]
                     }
                 },
                 deliveredCount: {
@@ -161,8 +200,7 @@ const getOrderStats = async (shopId) => {
         totalRevenue: 0,
         pendingCount: 0,
         confirmedCount: 0,
-        processingCount: 0,
-        shippedCount: 0,
+        shippingCount: 0,
         deliveredCount: 0,
         cancelledCount: 0
     };

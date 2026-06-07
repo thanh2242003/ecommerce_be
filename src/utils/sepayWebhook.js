@@ -47,43 +47,63 @@ const sign = ({ payload, secret }) => {
         .digest('hex');
 };
 
-const verifySePaySignature = ({ rawBody, signature, timestamp, secret, now = Date.now(), maxAgeMs = DEFAULT_MAX_AGE_MS }) => {
-    // if (!signature) {
-    //     return { ok: false, reason: 'Missing signature header' };
-    // }
+const verifySePaySignature = ({
+    rawBody,
+    signature,
+    timestamp,
+    secret,
+    now = Date.now(),
+    maxAgeMs = DEFAULT_MAX_AGE_MS
+}) => {
+    if (!signature) {
+        return { ok: false, reason: 'Missing signature header' };
+    }
 
-    // if (!timestamp) {
-    //     return { ok: false, reason: 'Missing timestamp header' };
-    // }
+    if (!timestamp) {
+        return { ok: false, reason: 'Missing timestamp header' };
+    }
 
-    // if (!secret) {
-    //     return { ok: false, reason: 'Missing webhook secret config' };
-    // }
+    if (!secret) {
+        return { ok: false, reason: 'Missing webhook secret config' };
+    }
 
-    // const timestampMs = toMillis(timestamp);
-    // if (!timestampMs) {
-    //     return { ok: false, reason: 'Invalid timestamp header' };
-    // }
+    const timestampMs = toMillis(timestamp);
+    if (!timestampMs) {
+        return { ok: false, reason: 'Invalid timestamp header' };
+    }
 
-    // const age = Math.abs(now - timestampMs);
-    // if (age > maxAgeMs) {
-    //     return { ok: false, reason: 'Webhook timestamp is too old or too far in future' };
-    // }
+    const age = Math.abs(now - timestampMs);
+    if (age > maxAgeMs) {
+        return {
+            ok: false,
+            reason: 'Webhook timestamp is too old or too far in future'
+        };
+    }
 
-    // const bodyBuffer = toBuffer(rawBody);
-    // const bodyText = bodyBuffer.toString('utf8');
-    // const normalizedSignature = String(signature).trim();
+    const bodyBuffer = toBuffer(rawBody);
+    const bodyText = bodyBuffer.toString('utf8');
 
-    // const candidates = [
-    //     sign({ payload: bodyText, secret }),
-    //     sign({ payload: `${timestamp}.${bodyText}`, secret }),
-    // ];
+    // SePay gửi dạng: sha256=<hash>
+    const normalizedSignature = String(signature)
+        .trim()
+        .replace(/^sha256=/i, '');
 
-    // const matched = candidates.some((candidate) => safeCompare(candidate, normalizedSignature));
+    const expectedSignature = sign({
+        payload: `${timestamp}.${bodyText}`,
+        secret
+    });
 
-    // if (!matched) {
-    //     return { ok: false, reason: 'Invalid webhook signature' };
-    // }
+    const matched = safeCompare(
+        expectedSignature,
+        normalizedSignature
+    );
+
+    if (!matched) {
+        return {
+            ok: false,
+            reason: 'Invalid webhook signature'
+        };
+    }
 
     return { ok: true };
 };

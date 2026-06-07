@@ -72,14 +72,23 @@ class PaymentService {
         }
 
         await this.expirePendingPaymentsForUser({ userId });
+        await OrderService.expirePendingOnlineOrdersForUser({ userId });
 
         const order = await Order.findOne({ _id: orderId, userId }).lean();
         if (!order) {
             throw new NotFoundError('Order not found');
         }
 
-        if (!['pending', 'confirmed'].includes(order.status)) {
-            throw new BadRequestError('Only pending or confirmed order can create SePay payment');
+        if (order.status !== 'pending') {
+            throw new BadRequestError('Only pending order can create SePay payment');
+        }
+
+        if (order.paymentMethod !== 'bank_transfer') {
+            throw new BadRequestError('Only bank_transfer order can create SePay payment');
+        }
+
+        if (order.paymentStatus !== 'pending') {
+            throw new BadRequestError(`Only pending paymentStatus can create SePay payment`);
         }
 
         const existingPending = await findPendingPaymentByOrder({ orderId, userId });
@@ -108,6 +117,8 @@ class PaymentService {
         await Order.findByIdAndUpdate(order._id, {
             $set: {
                 paymentMethod: 'bank_transfer',
+                paymentStatus: 'pending',
+                paymentExpiredAt: expiredAt,
                 transactionId: null,
                 paidAt: null,
             },
@@ -118,6 +129,7 @@ class PaymentService {
 
     static async getPaymentStatus({ userId, paymentId }) {
         await this.expirePendingPaymentsForUser({ userId });
+        await OrderService.expirePendingOnlineOrdersForUser({ userId });
 
         const payment = await findPaymentByIdForUser({ paymentId, userId });
         if (!payment) {
@@ -129,6 +141,7 @@ class PaymentService {
 
     static async getPaymentHistory({ userId, query = {} }) {
         await this.expirePendingPaymentsForUser({ userId });
+        await OrderService.expirePendingOnlineOrdersForUser({ userId });
 
         const { page, limit, skip } = parsePagination(query);
         const { items, total } = await listPaymentsByUser({ userId, skip, limit });
@@ -197,6 +210,43 @@ class PaymentService {
                 return { duplicate: true };
             }
 
+            if (['FAILED', 'EXPIRED'].includes(payment.status)) {
+                await markWebhookProcessed({ eventId, processResult: `payment_already_${payment.status.toLowerCase()}` });
+                console.log(`[SePay] ignored webhook ${eventId}: payment already ${payment.status}`);
+                return { ignored: true };
+            }
+
+            const order = await Order.findById(payment.orderId).lean();
+            if (!order) {
+                await markWebhookProcessed({ eventId, processResult: 'order_not_found' });
+                console.log(`[SePay] ignored webhook ${eventId}: order not found for payment ${payment._id}`);
+                return { ignored: true };
+            }
+
+            const closedPaymentStatuses = ['failed', 'expired', 'refund_pending', 'refunded'];
+            if (
+                order.status === 'cancelled' ||
+                closedPaymentStatuses.includes(order.paymentStatus)
+            ) {
+                await markWebhookProcessed({ eventId, processResult: 'order_not_payable' });
+                console.log(
+                    `[SePay] ignored webhook ${eventId}: order ${order._id} status=${order.status}, paymentStatus=${order.paymentStatus}`
+                );
+                return { ignored: true };
+            }
+
+            if (
+                order.paymentMethod !== 'bank_transfer' ||
+                order.status !== 'pending' ||
+                order.paymentStatus !== 'pending'
+            ) {
+                await markWebhookProcessed({ eventId, processResult: 'order_not_payable' });
+                console.log(
+                    `[SePay] ignored webhook ${eventId}: order ${order._id} paymentMethod=${order.paymentMethod}, status=${order.status}, paymentStatus=${order.paymentStatus}`
+                );
+                return { ignored: true };
+            }
+
             if (payment.expiredAt && new Date(payment.expiredAt).getTime() < Date.now()) {
                 await markPaymentExpired({ paymentId: payment._id, now: new Date() });
                 await OrderService.cancelOrderByPaymentTimeout({
@@ -213,6 +263,11 @@ class PaymentService {
                     transactionId: String(payload.id),
                     reason: 'Unsupported transferType',
                 });
+                await OrderService.cancelOrderByPaymentFailure({
+                    orderId: payment.orderId,
+                    paymentStatus: 'failed',
+                    cancelReason: 'Unsupported transferType',
+                });
                 await markWebhookProcessed({ eventId, processResult: 'invalid_transfer_type' });
                 return { failed: true };
             }
@@ -223,6 +278,11 @@ class PaymentService {
                     paymentId: payment._id,
                     transactionId: String(payload.id),
                     reason: 'Amount mismatch',
+                });
+                await OrderService.cancelOrderByPaymentFailure({
+                    orderId: payment.orderId,
+                    paymentStatus: 'failed',
+                    cancelReason: 'Amount mismatch',
                 });
                 await markWebhookProcessed({ eventId, processResult: 'amount_mismatch' });
                 return { failed: true };

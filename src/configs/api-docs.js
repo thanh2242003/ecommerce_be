@@ -176,10 +176,13 @@ const endpoints = [
     auth: true,
     status: 201,
     body: json({
-      items: [{ productId: 'product-id', quantity: 1, size: 'M', color: 'Black' }],
+      type: 'buy_now',
       addressId: 'address-id',
-      paymentMethod: 'COD',
-      note: 'Leave at the door',
+      productId: 'product-id',
+      variantId: 'variant-id',
+      quantity: 1,
+      finalPrice: 350000,
+      paymentMethod: 'bank_transfer',
     }),
   }),
   endpoint('Order', 'get', '/v1/api/order/orders', 'Get my orders', { auth: true }),
@@ -302,7 +305,7 @@ const endpoints = [
   endpoint('Shop', 'get', '/v1/api/shop/orders/{id}', 'Get shop order detail', { auth: true }),
   endpoint('Shop', 'patch', '/v1/api/shop/orders/{id}/status', 'Update shop order status', {
     auth: true,
-    body: json({ status: 'shipped' }),
+    body: json({ status: 'shipping' }),
   }),
   endpoint('Shop', 'get', '/v1/api/shop/dashboard', 'Get shop dashboard', { auth: true }),
   endpoint('Shop', 'get', '/v1/api/shop/status', 'Get shop status', { auth: true }),
@@ -331,7 +334,11 @@ const endpoints = [
   endpoint('Admin', 'get', '/v1/api/admin/orders/{id}', 'Get order by id as admin', { auth: true }),
   endpoint('Admin', 'patch', '/v1/api/admin/orders/{id}/status', 'Update order status as admin', {
     auth: true,
-    body: json({ status: 'completed' }),
+    body: json({ status: 'delivered' }),
+  }),
+  endpoint('Admin', 'patch', '/v1/api/admin/orders/{id}/refund/complete', 'Complete manual refund for order', {
+    auth: true,
+    body: json({ note: 'Refunded manually via bank transfer' }),
   }),
   endpoint('Admin', 'get', '/v1/api/admin/analytics/overview', 'Get admin analytics overview', { auth: true }),
   endpoint('Admin', 'post', '/v1/api/admin/notifications/send-bulk', 'Send bulk notifications', {

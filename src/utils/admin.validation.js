@@ -77,12 +77,27 @@ const normalizeOrderStatus = (status) => {
         return null;
     }
 
-    const validStatuses = ['pending', 'paid', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
     if (validStatuses.includes(value)) {
         return value;
     }
 
     throw new BadRequestError('Invalid order status');
+};
+
+const normalizePaymentStatus = (status) => {
+    const value = String(status || '').trim().toLowerCase();
+
+    if (!value) {
+        return null;
+    }
+
+    const validStatuses = ['unpaid', 'pending', 'paid', 'failed', 'expired', 'refund_pending', 'refunded'];
+    if (validStatuses.includes(value)) {
+        return value;
+    }
+
+    throw new BadRequestError('Invalid payment status');
 };
 
 const validateBulkNotificationInput = ({ userIds, title, body, type }) => {
@@ -120,5 +135,6 @@ module.exports = {
     normalizeUserStatus,
     normalizeProductStatus,
     normalizeOrderStatus,
+    normalizePaymentStatus,
     validateBulkNotificationInput,
 };

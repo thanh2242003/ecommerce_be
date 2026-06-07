@@ -33,7 +33,7 @@ const orderSchema = new Schema({
 
     status: {
         type: String,
-        enum: ['pending', 'paid', 'confirmed', 'shipping', 'delivered', 'cancelled'],
+        enum: ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'],
         default: 'pending',
         index: true
     },
@@ -44,11 +44,21 @@ const orderSchema = new Schema({
     
     paymentMethod: {
         type: String,
-        enum: ['cod', 'card', 'bank_transfer'],
+        enum: ['cod', 'bank_transfer'],
         default: 'cod'
     },
+    paymentStatus: {
+        type: String,
+        enum: ['unpaid', 'pending', 'paid', 'failed', 'expired', 'refund_pending', 'refunded'],
+        default: 'unpaid',
+        index: true
+    },
+    paymentExpiredAt: { type: Date, default: null, index: true },
     paidAt: { type: Date, default: null },
     transactionId: { type: String, default: null },
+    refundRequestedAt: { type: Date, default: null },
+    refundedAt: { type: Date, default: null },
+    stockRestoredAt: { type: Date, default: null },
     
     discountCode: { type: String, default: null },
     notes: { type: String, default: '' }

@@ -9,7 +9,156 @@ const Address = require('../models/address.model');
 const NotificationService = require('./notification.service');
 const { BadRequestError, NotFoundError } = require('../core/error.response');
 
+const ONLINE_PAYMENT_TIMEOUT_MINUTES = Number(process.env.SEPAY_PAYMENT_TIMEOUT_MINUTES || 15);
+
 class OrderService {
+    static normalizePaymentMethod(paymentMethod) {
+        const value = String(paymentMethod || 'cod').trim().toLowerCase();
+
+        if (['cod', 'bank_transfer'].includes(value)) {
+            return value;
+        }
+
+        if (['online', 'sepay'].includes(value)) {
+            return 'bank_transfer';
+        }
+
+        throw new BadRequestError('Invalid paymentMethod');
+    }
+
+    static getInitialPaymentStatus(paymentMethod) {
+        return paymentMethod === 'bank_transfer'
+            ? 'pending'
+            : 'unpaid';
+    }
+
+    static getPaymentExpiredAt(paymentMethod) {
+        return paymentMethod === 'bank_transfer'
+            ? new Date(Date.now() + ONLINE_PAYMENT_TIMEOUT_MINUTES * 60 * 1000)
+            : null;
+    }
+
+    static async restoreOrderStock({ order, session }) {
+        if (order.stockRestoredAt) {
+            return false;
+        }
+
+        const restoredAt = new Date();
+        const lockedOrder = await Order.findOneAndUpdate(
+            { _id: order._id, stockRestoredAt: null },
+            { $set: { stockRestoredAt: restoredAt } },
+            { new: true, session }
+        );
+
+        if (!lockedOrder) {
+            return false;
+        }
+
+        for (const item of order.items) {
+            await Product.findOneAndUpdate(
+                { _id: item.productId, 'variants._id': item.variantId },
+                { $inc: { 'variants.$.stock': item.quantity, salesNumber: -item.quantity } },
+                { session }
+            );
+
+            await Inventory.findOneAndUpdate(
+                { productId: item.productId, shopId: order.shopId },
+                { $inc: { totalQuantity: item.quantity } },
+                { session }
+            );
+        }
+
+        order.stockRestoredAt = restoredAt;
+        return true;
+    }
+
+    static applyCancellationPaymentStatus({ order, paymentStatusOnCancel = null }) {
+        if (paymentStatusOnCancel) {
+            order.paymentStatus = paymentStatusOnCancel;
+            return;
+        }
+
+        if (order.paymentStatus === 'refunded') {
+            return;
+        }
+
+        if (order.paymentStatus === 'refund_pending') {
+            return;
+        }
+
+        if (order.paymentStatus === 'paid') {
+            order.paymentStatus = 'refund_pending';
+            order.refundRequestedAt = order.refundRequestedAt || new Date();
+        }
+    }
+
+    static applyDeliveredPaymentStatus(order) {
+        if (order.paymentMethod === 'cod' && order.paymentStatus !== 'paid') {
+            order.paymentStatus = 'paid';
+            order.paidAt = order.paidAt || new Date();
+        }
+    }
+
+    static async cancelOrderByActor({
+        orderId,
+        cancelledBy = 'admin',
+        cancelReason = null,
+        paymentStatusOnCancel = null,
+        session = null,
+    }) {
+        const ownSession = !session;
+        const activeSession = session || await mongoose.startSession();
+
+        if (ownSession) {
+            activeSession.startTransaction();
+        }
+
+        try {
+            const order = await Order.findById(orderId).session(activeSession);
+            if (!order) {
+                throw new NotFoundError('Order not found');
+            }
+
+            if (order.status === 'cancelled') {
+                if (ownSession) {
+                    await activeSession.commitTransaction();
+                }
+                return order.toObject();
+            }
+
+            if (!['pending', 'confirmed'].includes(order.status)) {
+                throw new BadRequestError(`Cannot cancel order with status "${order.status}"`);
+            }
+
+            order.status = 'cancelled';
+            this.applyCancellationPaymentStatus({
+                order,
+                paymentStatusOnCancel,
+            });
+            order.paymentExpiredAt = null;
+            order.cancelReason = cancelReason || null;
+            order.cancelledAt = new Date();
+            order.cancelledBy = cancelledBy;
+
+            await this.restoreOrderStock({ order, session: activeSession });
+            await order.save({ session: activeSession });
+
+            if (ownSession) {
+                await activeSession.commitTransaction();
+            }
+
+            return order.toObject();
+        } catch (error) {
+            if (ownSession) {
+                await activeSession.abortTransaction();
+            }
+            throw error;
+        } finally {
+            if (ownSession) {
+                activeSession.endSession();
+            }
+        }
+    }
 
     static async markOrderPaidFromPayment({ orderId, transactionId, paymentMethod = 'bank_transfer', session = null }) {
         const order = await Order.findById(orderId).session(session);
@@ -22,70 +171,57 @@ class OrderService {
             throw new BadRequestError('Cannot mark cancelled order as paid');
         }
 
-        if (order.status === 'paid') {
+        if (order.paymentStatus === 'paid') {
             return order;
         }
 
         if (!['pending', 'confirmed'].includes(order.status)) {
-            throw new BadRequestError(`Cannot mark order as paid from status "${order.status}"`);
+            throw new BadRequestError(`Cannot mark payment as paid for order status "${order.status}"`);
         }
 
-        order.status = 'paid';
+        order.paymentStatus = 'paid';
         order.paidAt = new Date();
         order.transactionId = transactionId;
         order.paymentMethod = paymentMethod;
+        order.paymentExpiredAt = null;
         await order.save({ session });
 
         return order;
     }
 
+    static async cancelOrderByPaymentFailure({ orderId, paymentStatus = 'failed', cancelReason = 'Payment failed' }) {
+        return this.cancelOrderByActor({
+            orderId,
+            cancelledBy: 'admin',
+            cancelReason,
+            paymentStatusOnCancel: paymentStatus,
+        });
+    }
+
     static async cancelOrderByPaymentTimeout({ orderId, cancelReason = 'Payment timeout' }) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
+        return this.cancelOrderByActor({
+            orderId,
+            cancelledBy: 'admin',
+            cancelReason,
+            paymentStatusOnCancel: 'expired',
+        });
+    }
 
-        try {
-            const order = await Order.findById(orderId).session(session);
-            if (!order) {
-                throw new NotFoundError('Order not found');
-            }
+    static async expirePendingOnlineOrdersForUser({ userId, now = new Date(), limit = 50 }) {
+        const expiredOrders = await Order.find({
+            userId,
+            status: { $in: ['pending', 'confirmed'] },
+            paymentMethod: 'bank_transfer',
+            paymentStatus: 'pending',
+            paymentExpiredAt: { $lte: now },
+        }).sort({ paymentExpiredAt: 1 }).limit(limit);
 
-            if (order.status === 'cancelled') {
-                await session.commitTransaction();
-                return order.toObject();
-            }
-
-            if (!['pending', 'confirmed'].includes(order.status)) {
-                await session.commitTransaction();
-                return order.toObject();
-            }
-
-            order.status = 'cancelled';
-            order.cancelReason = cancelReason;
-            order.cancelledAt = new Date();
-            order.cancelledBy = 'admin';
-            await order.save({ session });
-
-            for (const item of order.items) {
-                await Product.findOneAndUpdate(
-                    { _id: item.productId, 'variants._id': item.variantId },
-                    { $inc: { 'variants.$.stock': item.quantity, salesNumber: -item.quantity } },
-                    { session }
-                );
-
-                await Inventory.findOneAndUpdate(
-                    { productId: item.productId, shopId: order.shopId },
-                    { $inc: { totalQuantity: item.quantity } },
-                    { session }
-                );
-            }
-
-            await session.commitTransaction();
-            return order.toObject();
-        } catch (error) {
-            await session.abortTransaction();
-            throw error;
-        } finally {
-            session.endSession();
+        for (const order of expiredOrders) {
+            await this.cancelOrderByPaymentFailure({
+                orderId: order._id,
+                paymentStatus: 'expired',
+                cancelReason: 'Payment timeout',
+            });
         }
     }
 
@@ -100,7 +236,9 @@ class OrderService {
      *
      * If any step fails the entire transaction is rolled back.
      */
-    static async createOrder({ userId, type, addressId, productId, variantId, quantity, finalPrice }) {
+    static async createOrder({ userId, type, addressId, productId, variantId, quantity, finalPrice, paymentMethod = 'cod' }) {
+        await this.expirePendingOnlineOrdersForUser({ userId });
+
         // ── Validate address ownership ──────────────────────────────
         const addressDoc = await Address.findOne({ _id: addressId, userId });
         if (!addressDoc) {
@@ -109,6 +247,7 @@ class OrderService {
 
         // Snapshot receiver info from Address — frozen at order time
         const { receiverName, receiverPhone, address } = addressDoc;
+        const normalizedPaymentMethod = this.normalizePaymentMethod(paymentMethod);
 
         let orderItems = [];
         let totalPrice = 0;
@@ -282,7 +421,10 @@ class OrderService {
                 totalPrice,
                 discountAmount: 0,
                 finalPrice: serverFinalPrice,
-                status: 'pending'
+                status: 'pending',
+                paymentMethod: normalizedPaymentMethod,
+                paymentStatus: this.getInitialPaymentStatus(normalizedPaymentMethod),
+                paymentExpiredAt: this.getPaymentExpiredAt(normalizedPaymentMethod)
             }], { session });
 
             // ── Commit transaction ──────────────────────────────────
@@ -318,6 +460,8 @@ class OrderService {
 
     // Lấy tất cả đơn hàng của user — mới nhất lên đầu
     static async getOrdersByUser({ userId }) {
+        await this.expirePendingOnlineOrdersForUser({ userId });
+
         return await Order.find({ userId })
             .sort({ createdAt: -1 })
             .lean();
@@ -325,6 +469,8 @@ class OrderService {
 
     // Lấy chi tiết 1 đơn hàng — kiểm tra quyền sở hữu
     static async getOrderById({ userId, orderId }) {
+        await this.expirePendingOnlineOrdersForUser({ userId });
+
         const order = await Order.findOne({ _id: orderId, userId }).lean();
 
         if (!order) {
@@ -348,33 +494,16 @@ class OrderService {
                 throw new BadRequestError(`Cannot cancel order with status "${order.status}"`);
             }
 
-            // Update order cancellation fields
-            order.status = 'cancelled';
-            order.cancelReason = cancelReason || null;
-            order.cancelledAt = new Date();
-            order.cancelledBy = 'user';
-            await order.save({ session });
-
-            // Restore stock and inventory for each item
-            for (const item of order.items) {
-                // Restore product variant stock and decrement salesNumber
-                await Product.findOneAndUpdate(
-                    { _id: item.productId, 'variants._id': item.variantId },
-                    { $inc: { 'variants.$.stock': item.quantity, salesNumber: -item.quantity } },
-                    { session }
-                );
-
-                // Restore inventory totalQuantity
-                await Inventory.findOneAndUpdate(
-                    { productId: item.productId, shopId: order.shopId },
-                    { $inc: { totalQuantity: item.quantity } },
-                    { session }
-                );
-            }
+            const cancelledOrder = await this.cancelOrderByActor({
+                orderId,
+                cancelledBy: 'user',
+                cancelReason,
+                session,
+            });
 
             await session.commitTransaction();
 
-            return order.toObject();
+            return cancelledOrder;
         } catch (error) {
             await session.abortTransaction();
             throw error;

@@ -10,11 +10,9 @@ const { BadRequestError } = require('../core/error.response');
  */
 const validateOrderStatusTransition = (currentStatus, newStatus) => {
     const validTransitions = {
-        pending: ['paid', 'confirmed', 'cancelled'],
-        paid: ['processing', 'cancelled'],
-        confirmed: ['processing', 'cancelled'],
-        processing: ['shipped'],
-        shipped: ['delivered'],
+        pending: ['confirmed', 'cancelled'],
+        confirmed: ['shipping', 'cancelled'],
+        shipping: ['delivered'],
         delivered: [],
         cancelled: []
     };
