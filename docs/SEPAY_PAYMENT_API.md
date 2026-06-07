@@ -141,6 +141,6 @@ Response `200`:
 
 - `PENDING`: Created, waiting for transfer.
 - `PROCESSING`: Callback is being processed.
-- `SUCCESS`: Payment verified and order marked paid.
+- `SUCCESS`: Payment verified and `order.paymentStatus` marked `paid`.
 - `FAILED`: Callback invalid or amount mismatch.
 - `EXPIRED`: Timed out, order cancelled.

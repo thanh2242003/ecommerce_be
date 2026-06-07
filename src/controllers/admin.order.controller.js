@@ -29,6 +29,17 @@ class AdminOrderController {
             ),
         }).send(res);
     };
+
+    completeManualRefund = async (req, res, next) => {
+        new SuccessResponse({
+            message: 'Complete manual refund successfully!',
+            metadata: await AdminOrderService.completeManualRefund(
+                req.params.id,
+                req.adminId,
+                req.body.note
+            ),
+        }).send(res);
+    };
 }
 
 module.exports = new AdminOrderController();

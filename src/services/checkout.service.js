@@ -3,7 +3,7 @@
 const { BadRequestError } = require("../core/error.response");
 const { cart } = require("../models/cart.model");
 const { order } = require("../models/order.model");
-const { findCardById } = require("../models/repositories/card.repo");
+const { findCartById } = require("../models/repositories/cart.repo");
 const { checkProductByServer } = require("../models/repositories/product.repo");
 const { getDiscountAmount } = require("./discount.service");
 // Redis cache/lock tam thoi vo hieu hoa theo yeu cau
@@ -60,8 +60,8 @@ class CheckoutService {
      */
 
     static async checkoutReview({ cartId, userId, shop_order_ids = [] }) {
-        //check cardId ton tai hay khong
-        const foundCart = await findCardById(cartId);
+        //check cartId ton tai hay khong
+        const foundCart = await findCartById(cartId);
         if (!foundCart) throw new BadRequestError('Cart not exists');
 
         const checkout_order = {

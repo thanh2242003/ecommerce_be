@@ -43,6 +43,7 @@ router.delete('/products/:id', asyncHandler(AdminProductController.deleteProduct
 router.get('/orders', asyncHandler(AdminOrderController.getOrders));
 router.get('/orders/:id', asyncHandler(AdminOrderController.getOrderById));
 router.patch('/orders/:id/status', asyncHandler(AdminOrderController.updateOrderStatus));
+router.patch('/orders/:id/refund/complete', asyncHandler(AdminOrderController.completeManualRefund));
 
 // Return request management
 router.get('/returns', asyncHandler(AdminReturnController.getReturns));

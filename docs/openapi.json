@@ -2398,70 +2398,44 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "items": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "productId": {
-                          "type": "string",
-                          "example": "product-id"
-                        },
-                        "quantity": {
-                          "type": "number",
-                          "example": 1
-                        },
-                        "size": {
-                          "type": "string",
-                          "example": "M"
-                        },
-                        "color": {
-                          "type": "string",
-                          "example": "Black"
-                        }
-                      },
-                      "example": {
-                        "productId": "product-id",
-                        "quantity": 1,
-                        "size": "M",
-                        "color": "Black"
-                      }
-                    },
-                    "example": [
-                      {
-                        "productId": "product-id",
-                        "quantity": 1,
-                        "size": "M",
-                        "color": "Black"
-                      }
-                    ]
+                  "type": {
+                    "type": "string",
+                    "example": "buy_now"
                   },
                   "addressId": {
                     "type": "string",
                     "example": "address-id"
                   },
+                  "productId": {
+                    "type": "string",
+                    "example": "product-id"
+                  },
+                  "variantId": {
+                    "type": "string",
+                    "example": "variant-id"
+                  },
+                  "quantity": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "finalPrice": {
+                    "type": "number",
+                    "example": 350000
+                  },
                   "paymentMethod": {
                     "type": "string",
-                    "example": "COD"
-                  },
-                  "note": {
-                    "type": "string",
-                    "example": "Leave at the door"
+                    "example": "bank_transfer"
                   }
                 }
               },
               "example": {
-                "items": [
-                  {
-                    "productId": "product-id",
-                    "quantity": 1,
-                    "size": "M",
-                    "color": "Black"
-                  }
-                ],
+                "type": "buy_now",
                 "addressId": "address-id",
-                "paymentMethod": "COD",
-                "note": "Leave at the door"
+                "productId": "product-id",
+                "variantId": "variant-id",
+                "quantity": 1,
+                "finalPrice": 350000,
+                "paymentMethod": "bank_transfer"
               }
             }
           }
@@ -4068,12 +4042,12 @@
                 "properties": {
                   "status": {
                     "type": "string",
-                    "example": "shipped"
+                    "example": "shipping"
                   }
                 }
               },
               "example": {
-                "status": "shipped"
+                "status": "shipping"
               }
             }
           }
@@ -4705,12 +4679,70 @@
                 "properties": {
                   "status": {
                     "type": "string",
-                    "example": "completed"
+                    "example": "delivered"
                   }
                 }
               },
               "example": {
-                "status": "completed"
+                "status": "delivered"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api/admin/orders/{id}/refund/complete": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Complete manual refund for order",
+        "description": "Complete manual refund for order",
+        "operationId": "patch_v1_api_admin_orders_id_refund_complete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Complete manual refund for order success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "message": "Complete manual refund for order successfully",
+                  "metadata": {}
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "note": {
+                    "type": "string",
+                    "example": "Refunded manually via bank transfer"
+                  }
+                }
+              },
+              "example": {
+                "note": "Refunded manually via bank transfer"
               }
             }
           }
