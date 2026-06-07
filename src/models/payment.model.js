@@ -16,8 +16,6 @@ const paymentSchema = new Schema(
         transactionId: {
             type: String,
             default: null,
-            unique: true,
-            sparse: true,
             trim: true,
         },
         userId: {
@@ -66,6 +64,19 @@ const paymentSchema = new Schema(
     {
         timestamps: true,
         collection: COLLECTION_NAME,
+    }
+);
+
+paymentSchema.index(
+    { transactionId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            transactionId: {
+                $exists: true,
+                $ne: null,
+            },
+        },
     }
 );
 

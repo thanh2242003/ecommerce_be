@@ -91,10 +91,10 @@ class PaymentService {
             throw new BadRequestError(`Only pending paymentStatus can create SePay payment`);
         }
 
-        const existingPending = await findPendingPaymentByOrder({ orderId, userId });
-        if (existingPending) {
-            return existingPending;
-        }
+        // const existingPending = await findPendingPaymentByOrder({ orderId, userId });
+        // if (existingPending) {
+        //     return existingPending;
+        // }
 
         const amount = Number(order.finalPrice || 0);
         if (amount <= 0) {
