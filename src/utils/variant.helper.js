@@ -72,13 +72,21 @@ class VariantHelper {
     if (session) options.session = session;
 
     const product = await Product.findOneAndUpdate(
-      { _id: productId, 'variants._id': variantId },
+      {
+        _id: productId,
+        variants: {
+          $elemMatch: {
+            _id: variantId,
+            stock: { $gte: quantity }
+          }
+        }
+      },
       { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
       options
     );
 
     if (!product) {
-      throw new NotFoundError('Product not found');
+      throw new BadRequestError('Insufficient stock or product variant not found');
     }
 
     return product;

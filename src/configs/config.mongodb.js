@@ -1,20 +1,5 @@
 'use strict';
 
-//level 0
-
-// const config = {
-//     app: {
-//         PORT: 3000
-//     },
-//     db: {
-//         host: 'localhost',
-//         port: 27017,
-//         name: 'shopDev'
-//     }
-// }
-
-//level 1
-
 //Development
 const dev = {
     app: {

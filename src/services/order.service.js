@@ -38,6 +38,42 @@ class OrderService {
             : null;
     }
 
+    static isTransientTransactionError(error) {
+        return Boolean(
+            error?.hasErrorLabel?.('TransientTransactionError') ||
+            error?.hasErrorLabel?.('UnknownTransactionCommitResult') ||
+            error?.code === 112 ||
+            /WriteConflict|TransientTransactionError|UnknownTransactionCommitResult/i.test(error?.message || '')
+        );
+    }
+
+    static async deductProductVariantStock({ product, variantId, quantity, session }) {
+        const updatedProduct = await Product.findOneAndUpdate(
+            {
+                _id: product._id,
+                variants: {
+                    $elemMatch: {
+                        _id: variantId,
+                        stock: { $gte: quantity },
+                    },
+                },
+            },
+            { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
+            { session, new: true }
+        );
+
+        if (!updatedProduct) {
+            const variant = product.getVariant(variantId);
+            const variantText = variant ? ` (${variant.color}, ${variant.size})` : '';
+
+            throw new BadRequestError(
+                `Insufficient stock for "${product.title}"${variantText}. Requested: ${quantity}`
+            );
+        }
+
+        return updatedProduct;
+    }
+
     static async restoreOrderStock({ order, session }) {
         if (order.stockRestoredAt) {
             return false;
@@ -236,7 +272,26 @@ class OrderService {
      *
      * If any step fails the entire transaction is rolled back.
      */
-    static async createOrder({ userId, type, addressId, productId, variantId, quantity, finalPrice, paymentMethod = 'cod' }) {
+    static async createOrder(args) {
+        const maxAttempts = 3;
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return await this.createOrderOnce(args);
+            } catch (error) {
+                lastError = error;
+
+                if (!this.isTransientTransactionError(error) || attempt === maxAttempts) {
+                    throw error;
+                }
+            }
+        }
+
+        throw lastError;
+    }
+
+    static async createOrderOnce({ userId, type, addressId, productId, variantId, quantity, finalPrice, paymentMethod = 'cod' }) {
         await this.expirePendingOnlineOrdersForUser({ userId });
 
         // ── Validate address ownership ──────────────────────────────
@@ -318,12 +373,13 @@ class OrderService {
                         size: variant.size || null   // ✅ From variant
                     });
 
-                    // ✅ Deduct stock at variant level (Product)
-                    await Product.findOneAndUpdate(
-                        { _id: product._id, 'variants._id': item.variantId },
-                        { $inc: { 'variants.$.stock': -item.quantity, salesNumber: item.quantity } },
-                        { session }
-                    );
+                    // Deduct stock atomically: only succeeds when this variant still has enough stock.
+                    await this.deductProductVariantStock({
+                        product,
+                        variantId: item.variantId,
+                        quantity: item.quantity,
+                        session,
+                    });
 
                     // ✅ Deduct inventory (Inventory model)
                     await Inventory.findOneAndUpdate(
@@ -386,12 +442,13 @@ class OrderService {
                     size: variant.size || null  // ✅ From variant
                 });
 
-                // ✅ Deduct stock at variant level (Product)
-                await Product.findOneAndUpdate(
-                    { _id: product._id, 'variants._id': variantId },
-                    { $inc: { 'variants.$.stock': -quantity, salesNumber: quantity } },
-                    { session }
-                );
+                // Deduct stock atomically: only succeeds when this variant still has enough stock.
+                await this.deductProductVariantStock({
+                    product,
+                    variantId,
+                    quantity,
+                    session,
+                });
 
                 // ✅ Deduct inventory (Inventory model)
                 await Inventory.findOneAndUpdate(
