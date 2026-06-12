@@ -45,6 +45,15 @@ function parseNumberField(value, fieldName) {
     return parsed;
 }
 
+function parseQueryNumber(value, fallback = undefined) {
+    if (value === undefined || value === null || value === '') {
+        return fallback;
+    }
+
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 function validateCreateProductBody(payload) {
     if (!payload.title) {
         throw new BadRequestError('title is required');
@@ -56,6 +65,10 @@ function validateCreateProductBody(payload) {
 
     if (!payload.categoryId) {
         throw new BadRequestError('categoryId is required');
+    }
+
+    if (!payload.ageRange) {
+        throw new BadRequestError('ageRange is required');
     }
 
     if (!Array.isArray(payload.sizes) || payload.sizes.length === 0) {
@@ -87,6 +100,7 @@ class ProductController {
                 req.body.gender !== undefined ? req.body.gender : (req.body.product_gender ?? 2),
                 'gender'
             ) ?? 2,
+            ageRange: req.body.ageRange || req.body.product_ageRange,
             sizes: parseMultipartField(req.body.sizes ?? req.body.product_sizes, []),
             colors: parseMultipartField(req.body.colors, []),
             variants: parseMultipartField(req.body.variants, []),
@@ -119,6 +133,10 @@ class ProductController {
 
         if (req.body.gender !== undefined) {
             updateData.gender = parseNumberField(req.body.gender, 'gender');
+        }
+
+        if (req.body.ageRange !== undefined) {
+            updateData.ageRange = req.body.ageRange;
         }
 
         if (req.body.sizes !== undefined) {
@@ -159,9 +177,10 @@ class ProductController {
             message: 'Get all products successfully!',
             metadata: await ProductService.getProducts({
                 categoryId: req.query.categoryId,
-                minPrice: req.query.minPrice,
-                maxPrice: req.query.maxPrice,
+                minPrice: parseQueryNumber(req.query.minPrice ?? req.query.price?.gte ?? req.query['price[gte]']),
+                maxPrice: parseQueryNumber(req.query.maxPrice ?? req.query.price?.lte ?? req.query['price[lte]']),
                 gender: req.query.gender,
+                ageRange: req.query.ageRange,
                 sort: req.query.sort,
                 page: req.query.page,
                 limit: req.query.limit
@@ -201,8 +220,16 @@ class ProductController {
             metadata: await ProductService.searchProducts({
                 keyword: req.query.q,
                 categoryId: req.query.categoryId,
+                ageRange: req.query.ageRange,
                 userId: req.user?.userId ?? null
             })
+        }).send(res);
+    }
+
+    getAgeRanges = async (req, res, next) => {
+        new SuccessResponse({
+            message: 'Get product age ranges successfully!',
+            metadata: await ProductService.getAgeRanges()
         }).send(res);
     }
 

@@ -6,6 +6,7 @@ const slugify = require('slugify');
 
 const DOCUMENT_NAME = 'Product';
 const COLLECTION_NAME = 'Products';
+const PRODUCT_AGE_RANGES = ['0-1', '1-3', '3-6', '6+'];
 
 const reviewSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -34,6 +35,12 @@ const productSchema = new Schema({
   price: { type: Number, required: true },
   discountedPrice: { type: Number, default: 0 },
   gender: { type: Number, required: true },
+  ageRange: {
+    type: String,
+    enum: PRODUCT_AGE_RANGES,
+    default: null,
+    index: true
+  },
   images: { type: [String], default: [] },
   sizes: { type: [String], default: [] },
   colors: [
@@ -200,4 +207,4 @@ productSchema.set('toJSON', {
 });
 
 module.exports = mongoose.models.Product || mongoose.model('Product', productSchema);
-
+module.exports.PRODUCT_AGE_RANGES = PRODUCT_AGE_RANGES;

@@ -291,7 +291,7 @@ class OrderService {
         throw lastError;
     }
 
-    static async createOrderOnce({ userId, type, addressId, productId, variantId, quantity, finalPrice, paymentMethod = 'cod' }) {
+    static async createOrderOnce({ userId, type, addressId, productId, variantId, quantity, finalPrice, paymentMethod = 'cod', selectedCartItems = [] }) {
         await this.expirePendingOnlineOrdersForUser({ userId });
 
         // ── Validate address ownership ──────────────────────────────
@@ -326,7 +326,26 @@ class OrderService {
                     throw new BadRequestError('Cart is empty');
                 }
 
-                for (const item of userCart.items) {
+                const selectedKeys = Array.isArray(selectedCartItems)
+                    ? new Set(
+                        selectedCartItems
+                            .filter(item => item?.productId && item?.variantId)
+                            .map(item => `${String(item.productId)}:${String(item.variantId)}`)
+                    )
+                    : new Set();
+
+                const cartItemsToOrder = selectedKeys.size
+                    ? userCart.items.filter(item => {
+                        const productIdValue = item.product?._id || item.product;
+                        return selectedKeys.has(`${String(productIdValue)}:${String(item.variantId)}`);
+                    })
+                    : userCart.items;
+
+                if (!cartItemsToOrder.length) {
+                    throw new BadRequestError('Selected cart items not found');
+                }
+
+                for (const item of cartItemsToOrder) {
                     const product = item.product;
 
                     if (!product) {
@@ -389,9 +408,22 @@ class OrderService {
                     );
                 }
 
-                // Clear cart after successful order creation
-                userCart.items = [];
-                userCart.totalPrice = 0;
+                // Remove ordered items after successful order creation. Requests without
+                // selectedCartItems keep the previous behavior and clear the whole cart.
+                if (selectedKeys.size) {
+                    userCart.items = userCart.items.filter(item => {
+                        const productIdValue = item.product?._id || item.product;
+                        return !selectedKeys.has(`${String(productIdValue)}:${String(item.variantId)}`);
+                    });
+                    userCart.totalPrice = userCart.items.reduce((sum, item) => {
+                        const price = Number(item.price || 0);
+                        const quantity = Number(item.quantity || 0);
+                        return sum + price * quantity;
+                    }, 0);
+                } else {
+                    userCart.items = [];
+                    userCart.totalPrice = 0;
+                }
                 await userCart.save({ session });
 
                 // ────────────────────────────────────────────────────────

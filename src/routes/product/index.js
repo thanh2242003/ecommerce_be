@@ -19,6 +19,9 @@ const upload = require('../../configs/multer.config');
 // SEARCH — optional auth so keyword is saved for logged-in users
 router.get('/search', optionalAuth, asyncHandler(ProductController.searchProducts));
 
+// AGE RANGES
+router.get('/age-ranges', asyncHandler(ProductController.getAgeRanges));
+
 // TOP SELLING
 router.get('/top-selling', asyncHandler(ProductController.getTopSelling));
 

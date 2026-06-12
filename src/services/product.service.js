@@ -6,6 +6,7 @@ const Product = require('../models/product.model');
 const Inventory = require('../models/inventory.model');
 const SearchHistory = require('../models/search_history.model');
 const Order = require('../models/order.model');
+const PRODUCT_AGE_RANGES = Product.PRODUCT_AGE_RANGES || ['0-1', '1-3', '3-6', '6+'];
 
 function formatProductResponse(doc) {
     if (!doc) return doc;
@@ -35,6 +36,21 @@ function formatProductsList(list) {
 
 function normalizeText(value) {
     return String(value ?? '').trim();
+}
+
+function normalizeAgeRange(value) {
+    const normalized = normalizeText(value);
+    return normalized || undefined;
+}
+
+function validateAgeRange(ageRange) {
+    if (!ageRange) {
+        throw new BadRequestError('ageRange is required');
+    }
+
+    if (!PRODUCT_AGE_RANGES.includes(ageRange)) {
+        throw new BadRequestError(`ageRange must be one of: ${PRODUCT_AGE_RANGES.join(', ')}`);
+    }
 }
 
 function validateProductVariants({ sizes, colors, variants }) {
@@ -105,6 +121,7 @@ class ProductService {
         discountedPrice,
         categoryId,
         gender,
+        ageRange,
         images,
         sizes,
         colors,
@@ -118,6 +135,7 @@ class ProductService {
         this.discountedPrice = discountedPrice
         this.categoryId = categoryId
         this.gender = gender
+        this.ageRange = normalizeAgeRange(ageRange)
         this.images = images
         this.sizes = sizes
         this.colors = colors
@@ -138,6 +156,7 @@ class ProductService {
             colors: this.colors,
             variants: this.variants
         });
+        validateAgeRange(this.ageRange);
 
         const newProduct = await Product.create({
             title: this.title,
@@ -146,6 +165,7 @@ class ProductService {
             discountedPrice: this.discountedPrice,
             categoryId: this.categoryId,
             gender: this.gender,
+            ageRange: this.ageRange,
             images: this.images || [],
             sizes: this.sizes || [],
             colors: this.colors || [],
@@ -226,7 +246,14 @@ class ProductService {
     }
 
     // ================= SEARCH =================
-    static async searchProducts({ keyword, categoryId, userId = null }) {
+    static async getAgeRanges() {
+        return PRODUCT_AGE_RANGES.map((value) => ({
+            value,
+            label: value
+        }));
+    }
+
+    static async searchProducts({ keyword, categoryId, ageRange, userId = null }) {
         if (userId && keyword && Types.ObjectId.isValid(userId)) {
             SearchHistory.create({
                 userId: new Types.ObjectId(userId),
@@ -246,6 +273,11 @@ class ProductService {
             query.categoryId = categoryId;
         }
 
+        const normalizedAgeRange = normalizeAgeRange(ageRange);
+        if (normalizedAgeRange) {
+            query.ageRange = normalizedAgeRange;
+        }
+
         const list = await Product.find(query);
         return formatProductsList(list);
     }
@@ -257,6 +289,7 @@ class ProductService {
         minPrice,
         maxPrice,
         gender,
+        ageRange,
         sort = 'createdAt',
         page = 1,
         limit = 10,
@@ -268,6 +301,8 @@ class ProductService {
 
         if (categoryId) query.categoryId = categoryId
         if (gender !== undefined) query.gender = gender
+        const normalizedAgeRange = normalizeAgeRange(ageRange)
+        if (normalizedAgeRange) query.ageRange = normalizedAgeRange
         if (product_shop) query.product_shop = product_shop
         if (isDraft !== undefined) query.isDraft = isDraft
         if (isPublished !== undefined) query.isPublished = isPublished
@@ -321,6 +356,11 @@ class ProductService {
             }
         }
         
+        if (payload.ageRange !== undefined) {
+            payload.ageRange = normalizeAgeRange(payload.ageRange);
+            validateAgeRange(payload.ageRange);
+        }
+
         const updated = await Product.findByIdAndUpdate(
             productId,
             payload,

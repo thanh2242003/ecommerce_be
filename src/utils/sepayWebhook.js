@@ -113,20 +113,22 @@ const parseSePayPayload = (rawBody) => {
     return JSON.parse(bodyText || '{}');
 };
 
-const resolveSePayPaymentCode = (payload = {}) => {
-    const directCode = String(payload.code || '').trim();
-    if (directCode) {
-        return directCode;
+const extractPaymentCode = (value) => {
+    const text = String(value || '').trim();
+    if (!text) {
+        return '';
     }
 
-    const contentCode = String(payload.content || '').trim();
-    if (contentCode) {
-        return contentCode;
-    }
-
-    const description = String(payload.description || '');
-    const matched = description.match(/OD[A-Z0-9]+/i);
+    const matched = text.match(/OD[A-Z0-9]+/i);
     return matched ? matched[0].toUpperCase() : '';
+};
+
+const resolveSePayPaymentCode = (payload = {}) => {
+    return (
+        extractPaymentCode(payload.code) ||
+        extractPaymentCode(payload.content) ||
+        extractPaymentCode(payload.description)
+    );
 };
 
 const validateSePayPayload = (payload) => {

@@ -30,6 +30,17 @@ const {
 } = require('../utils/sepayWebhook');
 
 const PAYMENT_TIMEOUT_MINUTES = Number(process.env.SEPAY_PAYMENT_TIMEOUT_MINUTES || 15);
+const FINAL_WEBHOOK_RESULTS = new Set([
+    'success',
+    'duplicate_transaction',
+    'already_success',
+    'payment_already_failed',
+    'payment_already_expired',
+    'order_not_payable',
+    'expired',
+    'invalid_transfer_type',
+    'amount_mismatch',
+]);
 
 class PaymentService {
     static buildPaymentCode(orderId) {
@@ -187,7 +198,7 @@ class PaymentService {
             timestamp,
         });
 
-        if (!isInserted && log?.processed) {
+        if (!isInserted && log?.processed && FINAL_WEBHOOK_RESULTS.has(log.processResult)) {
             return { duplicate: true };
         }
 

@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
 
-const { verifySePaySignature } = require('../src/utils/sepayWebhook');
+const { verifySePaySignature, resolveSePayPaymentCode } = require('../src/utils/sepayWebhook');
 
 test('verifySePaySignature accepts valid raw-body signature', () => {
     const secret = 'test-secret';
@@ -13,7 +13,7 @@ test('verifySePaySignature accepts valid raw-body signature', () => {
 
     const signature = crypto
         .createHmac('sha256', secret)
-        .update(raw)
+        .update(`${timestamp}.${raw}`)
         .digest('hex');
 
     const result = verifySePaySignature({
@@ -33,7 +33,7 @@ test('verifySePaySignature rejects old timestamp', () => {
 
     const signature = crypto
         .createHmac('sha256', secret)
-        .update(raw)
+        .update(`${oldTimestamp}.${raw}`)
         .digest('hex');
 
     const result = verifySePaySignature({
@@ -57,4 +57,14 @@ test('verifySePaySignature rejects invalid signature', () => {
 
     assert.equal(result.ok, false);
     assert.match(result.reason, /signature/i);
+});
+
+test('resolveSePayPaymentCode extracts payment code from noisy content', () => {
+    const result = resolveSePayPaymentCode({
+        code: '',
+        content: 'Thanh toan don hang ODE9029279792287 tai MBBank',
+        description: 'Ignored',
+    });
+
+    assert.equal(result, 'ODE9029279792287');
 });
